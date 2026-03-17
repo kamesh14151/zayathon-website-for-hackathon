@@ -1,26 +1,16 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import About from "@/components/About";
-import ProblemStatements from "@/components/ProblemStatements";
-import Prizes from "@/components/Prizes";
-import Timeline from "@/components/Timeline";
-import Sponsors from "@/components/Sponsors";
-import Team from "@/components/Team";
-import Registration from "@/components/Registration";
+import HomeFeatures from "@/components/HomeFeatures";
 import Footer from "@/components/Footer";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <Hero />
-      <About />
-      <ProblemStatements />
-      <Prizes />
-      <Timeline />
-      <Sponsors />
-      <Team />
-      <Registration />
+      <main className="flex-1">
+        <Hero />
+        <HomeFeatures />
+      </main>
       <Footer />
     </div>
   );

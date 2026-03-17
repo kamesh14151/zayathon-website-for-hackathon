@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Upload, CheckCircle2, AlertCircle } from "lucide-react";
+import { CheckCircle2, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import QRImage from "@/assets/QR.jpeg";
+import axios from "axios";
 
 const PaymentPage = () => {
   const navigate = useNavigate();
@@ -21,44 +20,20 @@ const PaymentPage = () => {
   // Get registration ID from navigation state
   const registrationId = location.state?.registrationId;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      // Validate file type
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-      if (!validTypes.includes(selectedFile.type)) {
-        toast({
-          title: "Invalid file type",
-          description: "Please upload a JPEG, PNG, or PDF file",
-          variant: "destructive",
-        });
-        return;
-      }
+  // Dodo setup
+  const [fullName, setFullName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [status, setStatus] = useState<"initial" | "processing" | "error">("initial");
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
-      // Validate file size (max 5MB)
-      if (selectedFile.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "File size should be less than 5MB",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setFile(selectedFile);
-    }
+  const getButtonText = () => {
+    if (status === "processing") return "Redirecting...";
+    if (status === "error") return "Try Again";
+    return "Continue to Payment (₹200)";
   };
 
-  const handleUpload = async () => {
-    if (!file) {
-      toast({
-        title: "No file selected",
-        description: "Please select a payment screenshot or PDF",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleCheckout = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!registrationId) {
       toast({
         title: "Registration ID missing",
@@ -69,191 +44,138 @@ const PaymentPage = () => {
       return;
     }
 
-    setUploading(true);
+    setStatus("processing");
+    setErrorMessage("");
 
     try {
-      // Create unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${registrationId}_${Date.now()}.${fileExt}`;
-      const filePath = `payment-screenshots/${fileName}`;
-
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('payments')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) {
-        throw uploadError;
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lookupKey: "basic",
+          customer: { email, name: fullName },
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create checkout session");
       }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('payments')
-        .getPublicUrl(filePath);
+      const checkoutUrl = data?.checkout_url || data?.checkoutUrl || data?.url;
 
-      // Update registration with payment screenshot URL
-      const { error: updateError } = await supabase
+      if (!checkoutUrl || typeof checkoutUrl !== "string") {
+        throw new Error("Checkout URL was not returned by the server");
+      }
+
+      await supabase
         .from('registrations')
-        .update({ payment_screenshot: urlData.publicUrl })
+        .update({ payment_status: 'checkout_initialized' })
         .eq('id', registrationId);
 
-      if (updateError) {
-        throw updateError;
-      }
-
-      setUploadSuccess(true);
+      window.location.assign(checkoutUrl);
+    } catch (err: any) {
+      setStatus("error");
+      setErrorMessage(err.message || "An unknown error occurred during checkout");
       toast({
-        title: "Payment screenshot uploaded!",
-        description: "Your payment proof has been submitted successfully",
-      });
-
-      // Redirect to home after 3 seconds
-      setTimeout(() => {
-        navigate("/");
-      }, 3000);
-
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      toast({
-        title: "Upload failed",
-        description: error.message || "Failed to upload payment screenshot",
+        title: "Checkout failed",
+        description: err.message || "Failed to create checkout session. Please try again.",
         variant: "destructive",
       });
     } finally {
-      setUploading(false);
+      if (status !== "error") setStatus("initial");
     }
   };
 
   if (uploadSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-black to-blue-900 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           className="text-center"
         >
-          <CheckCircle2 className="w-24 h-24 text-green-500 mx-auto mb-4" />
-          <h2 className="text-3xl font-bold text-white mb-2">Payment Submitted!</h2>
-          <p className="text-gray-300">Redirecting you to home page...</p>
+          <CheckCircle2 className="w-24 h-24 text-accent mx-auto mb-4" />
+          <h2 className="text-3xl font-display font-normal text-foreground mb-2">Payment Initialized!</h2>
+          <p className="text-muted-foreground">Redirecting you to checkout...</p>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-blue-900 py-12 px-4">
-      <div className="container mx-auto max-w-4xl">
+    <div className="min-h-screen bg-background py-16 px-4">
+      <div className="container mx-auto max-w-xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-center mb-8 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Complete Your Payment
-          </h1>
+          <div className="text-center mb-10">
+            <h1 className="text-4xl md:text-5xl font-display font-normal text-foreground mb-4">
+              Complete Your Registration
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Secure your spot by completing the payment. Follow the Dodo Payments flow securely.
+            </p>
+          </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* QR Code Section */}
-            <Card className="bg-gray-900/50 border-purple-500/30 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-white">Scan QR Code</CardTitle>
-                <CardDescription className="text-gray-400">
-                  Scan this QR code to make the payment
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center">
-                <div className="bg-white p-4 rounded-lg mb-4">
-                  <img 
-                    src={QRImage} 
-                    alt="Payment QR Code" 
-                    className="w-64 h-64 object-contain"
+          <Card className="glow-card border-border">
+            <CardHeader className="text-center pb-8 border-b border-border/50">
+              <div className="w-16 h-16 mx-auto bg-accent/10 rounded-full flex items-center justify-center mb-4">
+                <CreditCard className="w-8 h-8 text-accent" />
+              </div>
+              <CardTitle className="font-display font-normal text-2xl">Team Fee</CardTitle>
+              <CardDescription className="text-3xl font-display text-accent mt-2">
+                ₹200 <span className="text-base text-muted-foreground ml-1">INR</span>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-8 space-y-6">
+              <form onSubmit={handleCheckout} className="space-y-5">
+                <div className="space-y-4">
+                  <Input
+                    placeholder="Full name"
+                    type="text"
+                    className="h-12 bg-transparent focus-visible:ring-accent focus-visible:border-accent"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.currentTarget.value)}
+                    required
+                  />
+                  <Input
+                    placeholder="Email address"
+                    type="email"
+                    className="h-12 bg-transparent focus-visible:ring-accent focus-visible:border-accent"
+                    value={email}
+                    onChange={(e) => setEmail(e.currentTarget.value)}
+                    required
                   />
                 </div>
-                <div className="text-center text-gray-300 space-y-2">
-                  <p className="font-semibold text-lg">Registration Fee: ₹500</p>
-                  <p className="text-sm text-gray-400">per team</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Upload Section */}
-            <Card className="bg-gray-900/50 border-purple-500/30 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-white">Upload Payment Proof</CardTitle>
-                <CardDescription className="text-gray-400">
-                  Upload your payment screenshot or PDF
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="payment-file" className="text-white">
-                    Payment Screenshot / PDF
-                  </Label>
-                  <div className="flex flex-col gap-4">
-                    <Input
-                      id="payment-file"
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,application/pdf"
-                      onChange={handleFileChange}
-                      className="bg-gray-800 border-gray-700 text-white cursor-pointer"
-                    />
-                    {file && (
-                      <div className="flex items-center gap-2 text-green-400 text-sm">
-                        <CheckCircle2 className="w-4 h-4" />
-                        <span>{file.name}</span>
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    Accepted formats: JPEG, PNG, PDF (Max 5MB)
-                  </p>
-                </div>
-
-                <div className="bg-blue-900/30 border border-blue-500/30 rounded-lg p-4">
-                  <div className="flex gap-2">
-                    <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-blue-200">
-                      <p className="font-semibold mb-1">Important:</p>
-                      <ul className="list-disc list-inside space-y-1 text-xs">
-                        <li>Ensure the payment screenshot is clear and readable</li>
-                        <li>Include transaction ID and amount in the screenshot</li>
-                        <li>Your registration will be confirmed after verification</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-
+                
                 <Button
-                  onClick={handleUpload}
-                  disabled={!file || uploading}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground font-body font-medium tracking-wide text-[1rem] transition-all"
+                  type="submit"
+                  disabled={status === "processing"}
                 >
-                  {uploading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-5 h-5 mr-2" />
-                      Upload Payment Proof
-                    </>
-                  )}
+                  {getButtonText()}
                 </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => navigate("/")}
-                  className="w-full border-gray-700 text-gray-300 hover:bg-gray-800"
-                >
-                  Back to Home
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+                
+                {status === "error" && (
+                  <motion.p 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-destructive text-sm text-center font-medium bg-destructive/10 py-3 rounded-lg border border-destructive/20 mt-4"
+                  >
+                    {errorMessage}
+                  </motion.p>
+                )}
+                
+                <p className="text-xs text-center text-muted-foreground pt-4 flex items-center justify-center gap-1.5">
+                  Secured by <strong className="text-foreground">Dodo Payments</strong>
+                </p>
+              </form>
+            </CardContent>
+          </Card>
         </motion.div>
       </div>
     </div>

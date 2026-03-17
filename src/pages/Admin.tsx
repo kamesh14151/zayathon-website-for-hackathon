@@ -829,13 +829,13 @@ const Admin = () => {
                   {winners.map((winner) => {
                     const reg = registrations.find(r => r.id === winner.registration_id);
                     return (
-                      <div key={winner.id} className="border rounded-lg p-4 bg-gradient-to-r from-yellow-500/10 to-orange-500/10">
+                      <div key={winner.id} className="border rounded-lg p-4 bg-secondary">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                           <div className="flex items-center gap-4">
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold
-                              ${winner.rank === 1 ? 'bg-yellow-500 text-white' :
-                                winner.rank === 2 ? 'bg-gray-400 text-white' :
-                                'bg-orange-600 text-white'}`}>
+                              ${winner.rank === 1 ? 'bg-foreground text-background' :
+                                winner.rank === 2 ? 'bg-muted-foreground text-background' :
+                                'bg-primary text-primary-foreground'}`}>
                               {winner.rank === 1 ? '🥇' : winner.rank === 2 ? '🥈' : '🥉'}
                             </div>
                             <div>
@@ -875,21 +875,21 @@ const Admin = () => {
                       <span className="font-bold text-green-500">{approvedCount}</span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
-                      <div className="bg-green-500 h-2 rounded-full" style={{ width: `${totalCount ? (approvedCount/totalCount)*100 : 0}%` }}></div>
+                      <div className="bg-foreground h-2 rounded-full" style={{ width: `${totalCount ? (approvedCount/totalCount)*100 : 0}%` }}></div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span>Pending</span>
                       <span className="font-bold text-yellow-500">{pendingCount}</span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
-                      <div className="bg-yellow-500 h-2 rounded-full" style={{ width: `${totalCount ? (pendingCount/totalCount)*100 : 0}%` }}></div>
+                      <div className="bg-muted-foreground h-2 rounded-full" style={{ width: `${totalCount ? (pendingCount/totalCount)*100 : 0}%` }}></div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span>Rejected</span>
                       <span className="font-bold text-red-500">{rejectedCount}</span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
-                      <div className="bg-red-500 h-2 rounded-full" style={{ width: `${totalCount ? (rejectedCount/totalCount)*100 : 0}%` }}></div>
+                      <div className="bg-destructive h-2 rounded-full" style={{ width: `${totalCount ? (rejectedCount/totalCount)*100 : 0}%` }}></div>
                     </div>
                   </div>
                 </CardContent>

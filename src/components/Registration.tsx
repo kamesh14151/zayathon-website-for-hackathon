@@ -220,10 +220,9 @@ const Registration = () => {
   };
 
   return (
-    <section id="register" className="py-20 relative overflow-hidden">
-      {/* Background Glow */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+    <section id="register" className="py-24 relative overflow-hidden bg-background">
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-muted/60 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-muted/60 rounded-full blur-3xl pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
@@ -262,7 +261,7 @@ const Registration = () => {
                       required
                       value={formData.teamName}
                       onChange={(e) => handleChange("teamName", e.target.value)}
-                      className="bg-input border-border focus:border-primary"
+                      className="bg-input border-border focus:border-ring"
                     />
                   </div>
                   <div className="space-y-2">
@@ -275,7 +274,7 @@ const Registration = () => {
                       required
                       value={formData.leaderName}
                       onChange={(e) => handleChange("leaderName", e.target.value)}
-                      className="bg-input border-border focus:border-primary"
+                      className="bg-input border-border focus:border-ring"
                     />
                   </div>
                 </div>
@@ -292,7 +291,7 @@ const Registration = () => {
                       required
                       value={formData.email}
                       onChange={(e) => handleChange("email", e.target.value)}
-                      className="bg-input border-border focus:border-primary"
+                      className="bg-input border-border focus:border-ring"
                     />
                   </div>
                   <div className="space-y-2">
@@ -306,7 +305,7 @@ const Registration = () => {
                       required
                       value={formData.phone}
                       onChange={(e) => handleChange("phone", e.target.value)}
-                      className="bg-input border-border focus:border-primary"
+                      className="bg-input border-border focus:border-ring"
                     />
                   </div>
                 </div>
@@ -322,7 +321,7 @@ const Registration = () => {
                       required
                       value={formData.college}
                       onChange={(e) => handleChange("college", sanitizeName(e.target.value))}
-                      className="bg-input border-border focus:border-primary"
+                      className="bg-input border-border focus:border-ring"
                     />
                   </div>
                   <div className="space-y-2">
@@ -475,7 +474,7 @@ const Registration = () => {
                   type="submit"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full neon-button"
+                  className="w-full neon-button rounded-xl"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Submitting..." : "Submit Registration"}

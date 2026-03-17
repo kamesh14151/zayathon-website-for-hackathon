@@ -34,13 +34,14 @@ const team = [
 
 const Team = () => {
   return (
-    <section id="team" className="py-20 relative">
+    <section id="team" className="py-32 relative bg-background">
       <div className="container mx-auto px-4">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.7 }}
+          className="mb-20"
         >
           <h2 className="section-title">
             Our <span className="text-gradient">Team</span>
@@ -54,36 +55,34 @@ const Team = () => {
           {team.map((member, index) => (
             <motion.div
               key={member.name}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.6 }}
-              whileHover={{ y: -10 }}
-              className="glow-card p-6 text-center group"
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ delay: index * 0.12, duration: 0.6, ease: [0.2, 0.0, 0, 1] }}
+              whileHover={{ y: -2 }}
+              className="glow-card p-8 text-center group"
             >
               <motion.div
-                whileHover={{ scale: 1.05, rotate: 3 }}
-                className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden border-2 border-primary/50"
-                style={{
-                  boxShadow: "0 0 20px hsl(var(--neon-cyan) / 0.3)",
-                }}
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden border border-border/50 group-hover:border-accent/50 transition-colors duration-500"
               >
                 <img
                   src={member.image}
                   alt={member.name}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </motion.div>
 
-              <h3 className="font-display text-xl font-bold text-foreground mb-1">
+              <h3 className="font-display text-xl font-normal text-foreground mb-1 group-hover:text-accent transition-colors">
                 {member.name}
               </h3>
-              <p className="text-primary text-sm font-display tracking-wider mb-4">
+              <p className="text-muted-foreground text-xs tracking-[0.15em] uppercase mb-6 font-medium">
                 {member.role}
               </p>
 
-              <div className="flex justify-center gap-4">
+              <div className="flex justify-center gap-3">
                 {[
                   { icon: Linkedin, href: member.social.linkedin },
                   { icon: Twitter, href: member.social.twitter },
@@ -92,8 +91,11 @@ const Team = () => {
                   <motion.a
                     key={i}
                     href={social.href}
-                    whileHover={{ scale: 1.2, y: -3 }}
-                    className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                    whileHover={{ scale: 1.2, y: -2 }}
+                    className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground transition-all duration-200"
+                    style={{ background: "hsl(var(--background))" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "hsl(var(--accent))"; e.currentTarget.style.color = "hsl(var(--accent))"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; }}
                   >
                     <social.icon className="w-4 h-4" />
                   </motion.a>

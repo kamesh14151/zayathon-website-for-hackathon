@@ -1,129 +1,125 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import CountdownTimer from "./CountdownTimer";
-import heroBg from "@/assets/hero-bg.jpg";
 
 const Hero = () => {
   return (
     <section
       id="home"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 bg-background"
     >
-      {/* Background Image */}
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: `url(${heroBg})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="absolute inset-0 bg-background/80" />
-      </div>
-
-      {/* Cyber Grid Overlay */}
-      <div className="absolute inset-0 cyber-grid opacity-20 z-0" />
+      {/* Subtle minimalist radial at top */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-96 bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
 
       {/* Content */}
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 md:px-8 relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center"
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="text-center max-w-5xl mx-auto"
         >
+          {/* Badge */}
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="mb-6"
+            transition={{ delay: 0.1, duration: 0.5 }}
+            className="mb-8"
           >
-            <span className="inline-block px-4 py-2 rounded-full bg-primary/10 border border-primary/30 text-primary font-display text-sm tracking-widest">
-              FEBRUARY 2026 • REGISTER NOW
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase border border-border/50 bg-secondary/30 text-muted-foreground shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              Feb 2026 · Registrations Open
             </span>
           </motion.div>
 
+          {/* Headline — Minimalist tracking-tight */}
           <motion.h1
-            initial={{ y: 50, opacity: 0 }}
+            initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className="font-display text-5xl md:text-7xl lg:text-8xl font-black mb-6"
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="font-display font-semibold text-foreground mb-6"
+            style={{ fontSize: "clamp(3.5rem, 10vw, 8rem)", letterSpacing: "-0.05em", lineHeight: 0.95 }}
           >
-            <span className="text-gradient">ZAYA</span>
-            <span className="text-foreground">THON</span>
+            ZAYATHON
           </motion.h1>
 
-          <motion.p
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto"
-          >
-            The Ultimate Hackathon Experience for Students up to 3rd Year.
-            <br />
-            <span className="text-primary">Build. Innovate. Win.</span>
-          </motion.p>
-
+          {/* Sub-headline */}
           <motion.div
-            initial={{ y: 30, opacity: 0 }}
+            initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.7, duration: 0.8 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="max-w-3xl mx-auto mb-12"
           >
-            <motion.a
-              href="#register"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="neon-button"
-            >
-              Register Now
-            </motion.a>
-            <motion.a
-              href="#about"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="neon-button-secondary"
-            >
-              Learn More
-            </motion.a>
+            <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed font-body font-light">
+              Build real solutions, gain industry exposure, and compete for exciting prizes. Join hundreds of builders, creators, and innovators.
+            </p>
+          </motion.div>
+
+          {/* CTAs */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center mb-24"
+          >
+            <Link to="/register">
+              <motion.span
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-primary text-primary-foreground font-medium transition-all shadow-sm hover:shadow-md"
+              >
+                Register Your Team
+              </motion.span>
+            </Link>
+            <Link to="/details">
+              <motion.span
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-white text-foreground border border-border/60 hover:bg-secondary/50 font-medium transition-all shadow-sm"
+              >
+                Explore Details
+              </motion.span>
+            </Link>
+          </motion.div>
+
+          {/* Stats strip */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+            className="pt-10 flex flex-wrap justify-center gap-12 md:gap-24"
+          >
+            {[
+              { label: "Teams", value: "200+" },
+              { label: "Prize Pool", value: "₹****" },
+              { label: "Hours", value: "48" },
+              { label: "Mentors", value: "20+" },
+            ].map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                transition={{ delay: 0.5 + i * 0.1 }}
+                className="text-center cursor-default group"
+              >
+                <div className="font-display text-4xl md:text-5xl font-medium text-foreground tracking-tighter mb-2 group-hover:scale-105 transition-transform">
+                  {stat.value}
+                </div>
+                <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold">{stat.label}</div>
+              </motion.div>
+            ))}
           </motion.div>
 
           {/* Countdown */}
           <motion.div
-            initial={{ y: 50, opacity: 0 }}
+            initial={{ y: 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.9, duration: 0.8 }}
+            transition={{ delay: 0.85, duration: 0.8 }}
           >
-            <p className="text-muted-foreground mb-4 font-display tracking-widest text-sm">
-              EVENT STARTS IN
+            <p className="mb-5 text-xs tracking-[0.18em] uppercase text-muted-foreground font-medium">
+              Event starts in
             </p>
             <CountdownTimer targetDate="2026-02-15T09:00:00" />
           </motion.div>
         </motion.div>
-      </div>
-
-      {/* Animated Particles Effect */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-primary rounded-full"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: window.innerHeight + 10,
-              opacity: 0.5,
-            }}
-            animate={{
-              y: -10,
-              opacity: [0.5, 1, 0.5],
-            }}
-            transition={{
-              duration: Math.random() * 10 + 10,
-              repeat: Infinity,
-              delay: Math.random() * 5,
-              ease: "linear",
-            }}
-          />
-        ))}
       </div>
     </section>
   );
