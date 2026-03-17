@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Get environment variables - ensure they're strings
-const supabaseUrl = String(import.meta.env.VITE_SUPABASE_URL || '').trim();
-const supabaseAnonKey = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+const supabaseUrl = String(import.meta.env.VITE_PUBLIC_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL || '').trim();
+const supabaseAnonKey = String(import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
 // Create Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
