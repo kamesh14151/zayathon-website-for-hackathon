@@ -96,7 +96,7 @@ const PaymentPage = () => {
           animate={{ scale: 1 }}
           className="text-center"
         >
-          <CheckCircle2 className="w-24 h-24 text-accent mx-auto mb-4" />
+          <CheckCircle2 className="w-24 h-24 text-primary mx-auto mb-4" />
           <h2 className="text-3xl font-display font-normal text-foreground mb-2">Payment Initialized!</h2>
           <p className="text-muted-foreground">Redirecting you to checkout...</p>
         </motion.div>
@@ -123,11 +123,11 @@ const PaymentPage = () => {
 
           <Card className="glow-card border-border">
             <CardHeader className="text-center pb-8 border-b border-border/50">
-              <div className="w-16 h-16 mx-auto bg-accent/10 rounded-full flex items-center justify-center mb-4">
-                <CreditCard className="w-8 h-8 text-accent" />
+              <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                <CreditCard className="w-8 h-8 text-primary" />
               </div>
               <CardTitle className="font-display font-normal text-2xl">Team Fee</CardTitle>
-              <CardDescription className="text-3xl font-display text-accent mt-2">
+              <CardDescription className="text-3xl font-display text-primary mt-2">
                 ₹200 <span className="text-base text-muted-foreground ml-1">INR</span>
               </CardDescription>
             </CardHeader>
@@ -153,7 +153,7 @@ const PaymentPage = () => {
                 </div>
                 
                 <Button
-                  className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground font-body font-medium tracking-wide text-[1rem] transition-all"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-body font-medium tracking-wide text-[1rem] transition-all"
                   type="submit"
                   disabled={status === "processing"}
                 >

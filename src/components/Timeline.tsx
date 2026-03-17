@@ -79,7 +79,7 @@ const Timeline = () => {
             whileInView={{ scaleY: 0.4 }}
             viewport={{ once: true }}
             transition={{ duration: 1.5, ease: [0.2, 0.0, 0, 1] }}
-            className="absolute left-4 md:left-1/2 top-0 w-px bg-accent md:transform md:-translate-x-1/2 origin-top"
+            className="absolute left-4 md:left-1/2 top-0 w-px bg-primary md:transform md:-translate-x-1/2 origin-top"
           />
 
           {timelineEvents.map((event, index) => (
@@ -101,7 +101,7 @@ const Timeline = () => {
                 <div
                   className="w-8 h-8 rounded-full border border-border bg-card flex items-center justify-center cursor-pointer shadow-sm"
                 >
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: event.status === "completed" ? "hsl(var(--accent))" : "hsl(var(--muted-foreground))" }} />
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: event.status === "completed" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }} />
                 </div>
               </motion.div>
 
@@ -142,7 +142,7 @@ const Timeline = () => {
                   </div>
 
                   {/* Title */}
-                  <h3 className="font-display text-2xl font-normal text-foreground mb-3 group-hover:text-accent transition-colors">
+                  <h3 className="font-display text-2xl font-normal text-foreground mb-3 group-hover:text-primary transition-colors">
                     {event.title}
                   </h3>
 
@@ -156,8 +156,8 @@ const Timeline = () => {
                     <span
                       className="text-xs font-semibold tracking-wide px-2 py-1 rounded-full uppercase"
                       style={{
-                        backgroundColor: event.status === "completed" ? "hsl(var(--accent) / 0.12)" : "hsl(var(--ring) / 0.12)",
-                        color: event.status === "completed" ? "hsl(var(--accent))" : "hsl(var(--ring))",
+                        backgroundColor: event.status === "completed" ? "hsl(var(--primary) / 0.12)" : "hsl(var(--ring) / 0.12)",
+                        color: event.status === "completed" ? "hsl(var(--primary))" : "hsl(var(--ring))",
                       }}
                     >
                       {event.status === "completed" ? "✓ Completed" : "◯ Upcoming"}
@@ -177,7 +177,7 @@ const Timeline = () => {
             transition={{ delay: 0.6, duration: 0.5 }}
             className="absolute left-4 md:left-1/2 bottom-0 transform -translate-x-1/2 -translate-y-12"
           >
-            <div className="w-4 h-4 rounded-full bg-accent border-4 border-background" />
+            <div className="w-4 h-4 rounded-full bg-primary border-4 border-background" />
           </motion.div>
         </div>
 

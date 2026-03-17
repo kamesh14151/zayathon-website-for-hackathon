@@ -39,7 +39,7 @@ const SponsorCard = ({
       whileHover={{ y: -6, scale: 1.04 }}
       className={`glow-card ${sizePx[tier as keyof typeof sizePx]} flex flex-col items-center justify-center gap-2 cursor-pointer group`}
     >
-      <span className={`font-display font-normal text-foreground group-hover:text-accent transition-colors ${textSize[tier as keyof typeof textSize]}`}>
+      <span className={`font-display font-normal text-foreground group-hover:text-primary transition-colors ${textSize[tier as keyof typeof textSize]}`}>
         {sponsor.logo}
       </span>
       <span className="text-xs tracking-widest uppercase text-muted-foreground font-medium">

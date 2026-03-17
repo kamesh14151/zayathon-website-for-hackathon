@@ -68,7 +68,7 @@ const About = () => {
 
               <div className="h-px mb-8 bg-border/60" />
 
-              <h3 className="font-body text-2xl md:text-[1.75rem] font-medium text-foreground mb-3 leading-tight tracking-tight group-hover:text-accent transition-colors">
+              <h3 className="font-body text-2xl md:text-[1.75rem] font-medium text-foreground mb-3 leading-tight tracking-tight group-hover:text-primary transition-colors">
                 {feature.title}
               </h3>
               <p className="font-display text-[1.05rem] leading-relaxed text-muted-foreground">
@@ -102,7 +102,7 @@ const About = () => {
                 whileHover={{ scale: 1.05 }}
                 className="text-center group cursor-pointer"
               >
-                <div className="font-display text-5xl md:text-6xl font-normal text-foreground mb-3 transition-colors group-hover:text-accent">
+                <div className="font-display text-5xl md:text-6xl font-normal text-foreground mb-3 transition-colors group-hover:text-primary">
                   {stat.value}
                 </div>
                 <div className="text-muted-foreground uppercase tracking-widest text-xs font-medium">

@@ -75,7 +75,7 @@ const Team = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </motion.div>
 
-              <h3 className="font-display text-xl font-normal text-foreground mb-1 group-hover:text-accent transition-colors">
+              <h3 className="font-display text-xl font-normal text-foreground mb-1 group-hover:text-primary transition-colors">
                 {member.name}
               </h3>
               <p className="text-muted-foreground text-xs tracking-[0.15em] uppercase mb-6 font-medium">
@@ -94,7 +94,7 @@ const Team = () => {
                     whileHover={{ scale: 1.2, y: -2 }}
                     className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground transition-all duration-200"
                     style={{ background: "hsl(var(--background))" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "hsl(var(--accent))"; e.currentTarget.style.color = "hsl(var(--accent))"; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "hsl(var(--primary))"; e.currentTarget.style.color = "hsl(var(--primary))"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; }}
                   >
                     <social.icon className="w-4 h-4" />

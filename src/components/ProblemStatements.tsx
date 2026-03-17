@@ -37,11 +37,11 @@ const ProblemStatements = () => {
             >
               <div className="flex items-start gap-5">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110"
-                  style={{ background: "hsl(var(--accent) / 0.1)" }}>
-                  <Target className="w-6 h-6" style={{ color: "hsl(var(--accent))" }} />
+                  style={{ background: "hsl(var(--primary) / 0.1)" }}>
+                  <Target className="w-6 h-6" style={{ color: "hsl(var(--primary))" }} />
                 </div>
                 <div>
-                  <h3 className="font-display text-xl font-normal mb-2 text-foreground transition-colors group-hover:text-accent">
+                  <h3 className="font-display text-xl font-normal mb-2 text-foreground transition-colors group-hover:text-primary">
                     {statement}
                   </h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">
@@ -54,7 +54,7 @@ const ProblemStatements = () => {
                 <motion.span
                   initial={{ x: 0 }}
                   whileHover={{ x: 4 }}
-                  className="text-muted-foreground group-hover:text-accent transition-colors text-lg leading-none"
+                  className="text-muted-foreground group-hover:text-primary transition-colors text-lg leading-none"
                 >
                   →
                 </motion.span>

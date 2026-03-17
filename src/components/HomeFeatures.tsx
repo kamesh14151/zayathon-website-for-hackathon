@@ -42,7 +42,7 @@ const HomeFeatures = () => {
               className="glow-card p-10 flex flex-col group"
             >
               <div className="mb-8">
-                <feature.icon className="w-8 h-8 text-foreground/80 mb-6 group-hover:text-accent transition-colors duration-300" strokeWidth={1.5} />
+                <feature.icon className="w-8 h-8 text-foreground/80 mb-6 group-hover:text-primary transition-colors duration-300" strokeWidth={1.5} />
                 <h3 className="font-display text-2xl font-normal text-foreground mb-4 tracking-tight leading-snug">
                   {feature.title}
                 </h3>
@@ -53,7 +53,7 @@ const HomeFeatures = () => {
               <div className="mt-auto pt-8 border-t border-border/60">
                 <Link 
                   to={feature.link}
-                  className="inline-flex items-center text-sm font-medium text-foreground hover:text-accent transition-colors py-1 group/link"
+                  className="inline-flex items-center text-sm font-medium text-foreground hover:text-primary transition-colors py-1 group/link"
                 >
                   {feature.linkText}
                   <span className="ml-2 transition-transform duration-300 group-hover/link:translate-x-1">→</span>
