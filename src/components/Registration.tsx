@@ -474,7 +474,7 @@ const Registration = () => {
                   type="submit"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full neon-button rounded-xl"
+                  className="w-full neon-button rounded-full"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Submitting..." : "Submit Registration"}
