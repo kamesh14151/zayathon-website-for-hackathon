@@ -29,11 +29,7 @@ const RegisterPage = () => {
 
       {/* Hero band */}
       <div
-        className="pt-16"
-        style={{
-          background: "linear-gradient(160deg, hsl(48 11% 88%) 0%, hsl(60 22% 93%) 100%)",
-          borderBottom: "1px solid hsl(var(--border))",
-        }}
+        className="pt-16 bg-background border-b border-border/40"
       >
         <div className="container mx-auto px-4 py-16 md:py-20">
           <motion.div
