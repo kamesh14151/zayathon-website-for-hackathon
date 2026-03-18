@@ -6,44 +6,43 @@
 
 @layer base {
   :root {
-    /* Pure Minimalist White */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 6%;
+    /* Off-white background */
+    --background: 36 35% 97%; /* #F9F6F2 */
+    --foreground: 0 0% 10%;  /* #1A1A1A */
 
-    /* Crisp Soft Cards */
-    --card: 0 0% 99%;
-    --card-foreground: 0 0% 6%;
+    /* Card and popover backgrounds */
+    --card: 36 35% 99%;
+    --card-foreground: 0 0% 10%;
+    --popover: 36 35% 97%;
+    --popover-foreground: 0 0% 10%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 6%;
+    /* Navbar dark background */
+    --primary: 285 25% 10%; /* #18111A */
+    --primary-foreground: 0 0% 100%; /* #fff */
 
-    /* Pitch Black for Primary Focus */
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
+    /* Secondary (light gray) */
+    --secondary: 36 35% 92%;
+    --secondary-foreground: 0 0% 10%;
 
-    /* Barely visible gray for secondary */
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
+    --muted: 36 35% 92%;
+    --muted-foreground: 0 0% 40%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 9%;
+    --accent: 36 35% 92%;
+    --accent-foreground: 0 0% 10%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Extremely soft gray border */
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
-    --ring: 0 0% 9%;
+    /* Border: subtle gray */
+    --border: 36 15% 85%;
+    --input: 36 15% 85%;
+    --ring: 285 25% 10%;
 
     --radius: 1.5rem;
 
     --neon-cyan: 210 83% 67%;
-    --neon-magenta: 210 83% 67%;
-    --neon-purple: 210 83% 67%;
+    --neon-magenta: 320 83% 67%;
+    --neon-purple: 270 83% 67%;
   }
 }
 
