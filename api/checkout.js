@@ -24,6 +24,7 @@ export default async function handler(req, res) {
     // Create the payment checkout logic pointing to Dodo's REST API or similar SDK endpoint
     const dodoPayload = {
       billing,
+      payment_link: true,
       product_cart: [{ 
         product_id: process.env.DODO_PRODUCT_ID_BASIC || 'zayathon_team_fee', 
         quantity: 1 
@@ -84,12 +85,18 @@ export default async function handler(req, res) {
           dodoData.checkoutUrl ||
           dodoData.url ||
           dodoData.payment_link ||
+          dodoData?.payment_link?.payment_link ||
+          dodoData?.payment_link?.url ||
+          dodoData?.payment_link?.checkout_url ||
           dodoData.payment_url ||
           dodoData.hosted_url ||
           dodoData?.data?.checkout_url ||
           dodoData?.data?.checkoutUrl ||
           dodoData?.data?.url ||
           dodoData?.data?.payment_link ||
+          dodoData?.data?.payment_link?.payment_link ||
+          dodoData?.data?.payment_link?.url ||
+          dodoData?.data?.payment_link?.checkout_url ||
           dodoData?.data?.payment_url ||
           dodoData?.data?.hosted_url;
 
