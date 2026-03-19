@@ -29,7 +29,8 @@ import {
 } from '@/components/ui/select';
 import {
   Users, Download, RefreshCw, Search, LogOut, Check, X,
-  Trophy, Mail, BarChart3, Plus, Edit, Trash2, Send, Image, CalendarDays, SlidersHorizontal
+  Trophy, Mail, BarChart3, Plus, Edit, Trash2, Send, Image, CalendarDays, SlidersHorizontal,
+  CreditCard, Wallet, TrendingUp, Globe2
 } from 'lucide-react';
 import { ADMIN_EMAIL, ADMIN_SESSION_KEY } from '@/lib/adminAuth';
 import {
@@ -74,6 +75,16 @@ interface Winner {
 }
 
 const FALLBACK_API_BASE_URL = 'https://zayathon-website-for-hackathon.vercel.app';
+const TEAM_FEE_INR = 200;
+
+const COUNTRY_META: Record<string, { x: number; y: number; flag: string }> = {
+  India: { x: 70, y: 56, flag: '🇮🇳' },
+  'United States': { x: 24, y: 44, flag: '🇺🇸' },
+  'United Kingdom': { x: 47, y: 39, flag: '🇬🇧' },
+  France: { x: 49, y: 43, flag: '🇫🇷' },
+  Germany: { x: 51, y: 40, flag: '🇩🇪' },
+  Other: { x: 58, y: 50, flag: '🌐' },
+};
 
 const resolveApiUrl = (path: string) => {
   const configuredBase = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/$/, '');
@@ -98,6 +109,7 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState('registrations');
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
   const [timelineEvents, setTimelineEvents] = useState<EditableTimelineEvent[]>([]);
   const [timelineLoading, setTimelineLoading] = useState(true);
   const [timelineSaving, setTimelineSaving] = useState(false);
@@ -750,6 +762,74 @@ const Admin = () => {
   const rejectedCount = registrations.filter(r => r.status === 'rejected').length;
   const paidCount = registrations.filter(r => (r.payment_status || '').toLowerCase() === 'payment_success' || !!r.payment_screenshot).length;
 
+  const paymentSuccessRegistrations = registrations.filter(
+    (r) => (r.payment_status || '').toLowerCase() === 'payment_success' || !!r.payment_screenshot
+  );
+  const totalRevenueInr = paymentSuccessRegistrations.length * TEAM_FEE_INR;
+  const totalRefundsInr = 0;
+  const payoutsReceivedInr = 0;
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dayBuckets = Array.from({ length: 30 }, (_, i) => {
+    const d = new Date(startOfToday);
+    d.setDate(startOfToday.getDate() - (29 - i));
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return {
+      key,
+      label: d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+      revenue: 0,
+    };
+  });
+
+  paymentSuccessRegistrations.forEach((reg) => {
+    const d = new Date(reg.created_at);
+    if (Number.isNaN(d.getTime())) return;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const bucket = dayBuckets.find((b) => b.key === key);
+    if (bucket) bucket.revenue += TEAM_FEE_INR;
+  });
+
+  const maxDailyRevenue = Math.max(...dayBuckets.map((b) => b.revenue), TEAM_FEE_INR);
+
+  const inferCountry = (institution: string, phone: string) => {
+    const text = `${institution || ''} ${phone || ''}`.toLowerCase();
+    if (text.includes('+91') || text.includes('india') || text.includes('tamil nadu')) return 'India';
+    if (text.includes('+1') || text.includes('usa') || text.includes('united states')) return 'United States';
+    if (text.includes('+44') || text.includes('uk') || text.includes('united kingdom')) return 'United Kingdom';
+    if (text.includes('+33') || text.includes('france')) return 'France';
+    if (text.includes('+49') || text.includes('germany')) return 'Germany';
+    return 'Other';
+  };
+
+  const countryRevenueMap = new Map<string, number>();
+  paymentSuccessRegistrations.forEach((reg) => {
+    const country = inferCountry(reg.institution, reg.contact_phone);
+    countryRevenueMap.set(country, (countryRevenueMap.get(country) || 0) + TEAM_FEE_INR);
+  });
+
+  const topCountries = Array.from(countryRevenueMap.entries())
+    .map(([country, revenue]) => ({ country, revenue }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+  const maxCountryRevenue = Math.max(...topCountries.map((c) => c.revenue), TEAM_FEE_INR);
+  const activeCountry = topCountries.find((c) => c.country === hoveredCountry) || topCountries[0] || null;
+  const activeCountryMeta = activeCountry ? (COUNTRY_META[activeCountry.country] || COUNTRY_META.Other) : COUNTRY_META.Other;
+
+  const getMonthRevenue = (year: number, month: number) => paymentSuccessRegistrations
+    .filter((reg) => {
+      const d = new Date(reg.created_at);
+      return d.getFullYear() === year && d.getMonth() === month;
+    })
+    .length * TEAM_FEE_INR;
+
+  const currentMonthRevenue = getMonthRevenue(now.getFullYear(), now.getMonth());
+  const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const previousMonthRevenue = getMonthRevenue(prevDate.getFullYear(), prevDate.getMonth());
+  const growthRate = previousMonthRevenue > 0
+    ? ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100
+    : (currentMonthRevenue > 0 ? 100 : 0);
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
@@ -829,12 +909,13 @@ const Admin = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-5 w-full max-w-4xl">
+          <TabsList className="grid grid-cols-6 w-full max-w-5xl">
             <TabsTrigger value="registrations"><Users className="w-4 h-4 mr-2" />Registrations</TabsTrigger>
             <TabsTrigger value="problems"><Edit className="w-4 h-4 mr-2" />Problems</TabsTrigger>
             <TabsTrigger value="winners"><Trophy className="w-4 h-4 mr-2" />Winners</TabsTrigger>
             <TabsTrigger value="timeline"><CalendarDays className="w-4 h-4 mr-2" />Timeline</TabsTrigger>
             <TabsTrigger value="analytics"><BarChart3 className="w-4 h-4 mr-2" />Analytics</TabsTrigger>
+            <TabsTrigger value="payments"><CreditCard className="w-4 h-4 mr-2" />Payments</TabsTrigger>
           </TabsList>
 
           {/* Registrations Tab */}
@@ -1354,6 +1435,192 @@ const Admin = () => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          </TabsContent>
+
+          {/* Payments Tab */}
+          <TabsContent value="payments">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                      <Wallet className="w-4 h-4" />
+                      Total Revenue
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">Rs {totalRevenueInr.toLocaleString('en-IN')}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                      <CreditCard className="w-4 h-4" />
+                      Payments Count
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{paymentSuccessRegistrations.length}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                      <RefreshCw className="w-4 h-4" />
+                      Total Refunds
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">Rs {totalRefundsInr.toLocaleString('en-IN')}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                      <TrendingUp className="w-4 h-4" />
+                      Payouts Received
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">Rs {payoutsReceivedInr.toLocaleString('en-IN')}</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Revenue (Last 30 Days)</CardTitle>
+                  <CardDescription>Derived from successful payment registrations.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-52 w-full border rounded-lg p-3 bg-muted/20">
+                    <div className="h-full flex items-end gap-1">
+                      {dayBuckets.map((bucket) => (
+                        <div key={bucket.key} className="flex-1 flex flex-col items-center justify-end gap-1 min-w-[8px]">
+                          <div
+                            className="w-full rounded-sm bg-foreground/80 hover:bg-foreground transition-colors"
+                            style={{ height: `${Math.max((bucket.revenue / maxDailyRevenue) * 100, bucket.revenue > 0 ? 6 : 2)}%` }}
+                            title={`${bucket.label}: Rs ${bucket.revenue.toLocaleString('en-IN')}`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground flex items-center justify-between">
+                    <span>{dayBuckets[0]?.label}</span>
+                    <span>{dayBuckets[dayBuckets.length - 1]?.label}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Globe2 className="w-4 h-4" />Top Revenue Generating Countries</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-5 items-center">
+                      <div className="rounded-lg overflow-hidden border bg-background p-2 h-[280px] lg:h-[320px] relative">
+                        <img
+                          src="/dotted-map/Black_on_white_dotted_world_map_vector.jpg"
+                          alt="Dotted world map"
+                          className="w-full h-full object-contain"
+                        />
+
+                        {topCountries.map((row) => {
+                          const meta = COUNTRY_META[row.country] || COUNTRY_META.Other;
+                          const isActive = activeCountry?.country === row.country;
+                          return (
+                            <button
+                              key={`${row.country}-marker`}
+                              type="button"
+                              className={`absolute -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 transition-all ${
+                                isActive
+                                  ? 'bg-green-500 border-white scale-125 shadow-[0_0_0_6px_rgba(34,197,94,0.18)]'
+                                  : 'bg-blue-500 border-white hover:scale-110'
+                              }`}
+                              style={{ left: `${meta.x}%`, top: `${meta.y}%` }}
+                              onMouseEnter={() => setHoveredCountry(row.country)}
+                              onMouseLeave={() => setHoveredCountry(null)}
+                              aria-label={`${row.country} revenue marker`}
+                            />
+                          );
+                        })}
+
+                        {activeCountry ? (
+                          <div
+                            className="absolute z-10 bg-white border rounded-xl px-3 py-2 shadow-lg min-w-[120px]"
+                            style={{
+                              left: `min(calc(${activeCountryMeta.x}% + 14px), calc(100% - 136px))`,
+                              top: `max(calc(${activeCountryMeta.y}% - 52px), 10px)`,
+                            }}
+                          >
+                            <p className="text-xs text-muted-foreground mb-0.5">{COUNTRY_META[activeCountry.country]?.flag || '🌐'} {activeCountry.country}</p>
+                            <p className="text-sm font-semibold">Rs {activeCountry.revenue.toLocaleString('en-IN')}</p>
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <div className="space-y-3">
+                        {topCountries.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">No payment country data yet.</p>
+                        ) : topCountries.map((row) => (
+                          <div
+                            key={row.country}
+                            className="rounded-lg p-2 hover:bg-muted/40 transition-colors"
+                            onMouseEnter={() => setHoveredCountry(row.country)}
+                            onMouseLeave={() => setHoveredCountry(null)}
+                          >
+                            <div className="flex items-center justify-between text-sm mb-1">
+                              <span className="font-medium flex items-center gap-2">
+                                <span>{COUNTRY_META[row.country]?.flag || '🌐'}</span>
+                                {row.country}
+                              </span>
+                              <span className="text-muted-foreground">Rs {row.revenue.toLocaleString('en-IN')}</span>
+                            </div>
+                            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${activeCountry?.country === row.country ? 'bg-blue-600' : 'bg-blue-500'}`}
+                                style={{ width: `${(row.revenue / maxCountryRevenue) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Revenue Growth Rate</CardTitle>
+                    <CardDescription>Month-over-month view based on successful payments.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="p-3 rounded-lg bg-muted/30">
+                        <p className="text-xs text-muted-foreground mb-1">Previous Month</p>
+                        <p className="text-lg font-semibold">Rs {previousMonthRevenue.toLocaleString('en-IN')}</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted/30">
+                        <p className="text-xs text-muted-foreground mb-1">Current Month</p>
+                        <p className="text-lg font-semibold">Rs {currentMonthRevenue.toLocaleString('en-IN')}</p>
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-lg border bg-background flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Growth Rate</span>
+                      <span className={`text-xl font-bold ${growthRate >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {growthRate >= 0 ? '+' : ''}{growthRate.toFixed(1)}%
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
