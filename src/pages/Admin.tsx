@@ -52,6 +52,7 @@ interface Registration {
   year_of_study: string;
   problem_statement: string;
   status: 'pending' | 'approved' | 'rejected';
+  updated_at?: string;
   payment_status?: string;
   payment_screenshot?: string;
   created_at: string;
@@ -1011,16 +1012,34 @@ const Admin = () => {
                   <div className="space-y-4">
                     {filteredRegistrations.map((reg) => (
                       <div key={reg.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                        {(() => {
+                          const statusDisplay = reg.status === 'approved'
+                            ? {
+                                label: 'Approved',
+                                className: 'bg-green-500/10 text-green-700 border-green-500/40',
+                                icon: <Check className="w-3 h-3" />,
+                              }
+                            : reg.status === 'rejected'
+                              ? {
+                                  label: 'Rejected',
+                                  className: 'bg-red-500/10 text-red-700 border-red-500/40',
+                                  icon: <X className="w-3 h-3" />,
+                                }
+                              : {
+                                  label: 'Pending Review',
+                                  className: 'bg-amber-500/10 text-amber-700 border-amber-500/40',
+                                  icon: <RefreshCw className="w-3 h-3" />,
+                                };
+
+                          return (
                         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2 flex-wrap">
                               <h3 className="font-semibold text-lg">{reg.team_name}</h3>
                               {reg.team_id ? <Badge variant="outline">{reg.team_id}</Badge> : null}
-                              <Badge variant={
-                                reg.status === 'approved' ? 'default' :
-                                reg.status === 'rejected' ? 'destructive' : 'secondary'
-                              }>
-                                {reg.status}
+                              <Badge variant="outline" className={`flex items-center gap-1 ${statusDisplay.className}`}>
+                                {statusDisplay.icon}
+                                {statusDisplay.label}
                               </Badge>
                               {reg.payment_screenshot ? (
                                 <Badge className="bg-green-500/10 text-green-600 border-green-500/50">
@@ -1054,6 +1073,10 @@ const Admin = () => {
                               </p>
                               <p>
                                 <span className="font-medium">Payment Status:</span> {reg.payment_status || (reg.payment_screenshot ? 'payment_success' : 'payment_pending')}
+                              </p>
+                              <p>
+                                <span className="font-medium">Registration Status:</span> {statusDisplay.label}
+                                {reg.updated_at ? ` • ${new Date(reg.updated_at).toLocaleString('en-IN')}` : ''}
                               </p>
                             </div>
                             <p className="text-sm text-muted-foreground mt-2">
@@ -1117,43 +1140,63 @@ const Admin = () => {
                               </>
                             )}
                             {reg.status === 'approved' && (
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                onClick={() => handleRejectRegistration(reg.id)}
-                                className="w-full"
-                                disabled={processingIds.has(reg.id)}
-                              >
-                                {processingIds.has(reg.id) ? (
-                                  <>
-                                    <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
-                                    Processing...
-                                  </>
-                                ) : (
-                                  <>
-                                    <X className="w-4 h-4 mr-1" />Revoke
-                                  </>
-                                )}
-                              </Button>
+                              <>
+                                <Button 
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-full border-green-500/40 text-green-700"
+                                  disabled
+                                >
+                                  <Check className="w-4 h-4 mr-1" />Approved
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="destructive" 
+                                  onClick={() => handleRejectRegistration(reg.id)}
+                                  className="w-full"
+                                  disabled={processingIds.has(reg.id)}
+                                >
+                                  {processingIds.has(reg.id) ? (
+                                    <>
+                                      <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                                      Processing...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <X className="w-4 h-4 mr-1" />Mark Rejected
+                                    </>
+                                  )}
+                                </Button>
+                              </>
                             )}
                             {reg.status === 'rejected' && (
-                              <Button 
-                                size="sm" 
-                                onClick={() => handleApproveRegistration(reg.id)} 
-                                className="bg-green-500 hover:bg-green-600 w-full"
-                                disabled={processingIds.has(reg.id)}
-                              >
-                                {processingIds.has(reg.id) ? (
-                                  <>
-                                    <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
-                                    Processing...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Check className="w-4 h-4 mr-1" />Approve
-                                  </>
-                                )}
-                              </Button>
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-full border-red-500/40 text-red-700"
+                                  disabled
+                                >
+                                  <X className="w-4 h-4 mr-1" />Rejected
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handleApproveRegistration(reg.id)} 
+                                  className="bg-green-500 hover:bg-green-600 w-full"
+                                  disabled={processingIds.has(reg.id)}
+                                >
+                                  {processingIds.has(reg.id) ? (
+                                    <>
+                                      <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                                      Processing...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Check className="w-4 h-4 mr-1" />Approve Again
+                                    </>
+                                  )}
+                                </Button>
+                              </>
                             )}
                             <Button 
                               size="sm" 
@@ -1193,6 +1236,8 @@ const Admin = () => {
                             </Button>
                           </div>
                         </div>
+                        );
+                        })()}
                       </div>
                     ))}
                   </div>
