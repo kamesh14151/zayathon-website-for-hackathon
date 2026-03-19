@@ -1,5 +1,10 @@
 # Payment System Setup Instructions
 
+## Project Update
+
+- This project has been revamped by AJ STUDIOZ.
+- The public favicon/logo has been added at `public/favicon.png` (AJ STUDIOZ logo).
+
 ## Overview
 The payment page has been successfully created with QR code display and file upload functionality. Here's what was implemented:
 
@@ -79,7 +84,45 @@ Ensure your `.env` file has:
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+RESEND_API_KEY=your_resend_api_key
+RESEND_FROM_EMAIL=Zayathon <you@yourdomain.com>
+DODO_WEBHOOK_SECRET=shared_secret_for_webhook_calls
+PAYMENT_REMINDER_SECRET=shared_secret_for_reminder_endpoint
+PAYMENT_REMINDER_MINUTES=45
 ```
+
+Notes:
+- `PAYMENT_REMINDER_SECRET` is optional. Set it if you want to protect `/api/payment-reminders` from unauthorized calls.
+- `PAYMENT_REMINDER_MINUTES` is optional. If not set, it defaults to `45` minutes in code.
+- If both are not set, reminders still run with default timing and without secret protection.
+
+### 5. Apply Payment Lifecycle Migration
+Run the migration below to support payment event tracking and reminders:
+
+```bash
+supabase db push
+```
+
+It includes `payment_status`, `dodo_payment_id`, `checkout_url`, and reminder timestamps.
+
+### 6. Configure Dodo Webhook
+Point Dodo webhook to:
+
+```text
+https://your-domain.com/api/dodo-webhook
+```
+
+Set the same secret in Dodo and `DODO_WEBHOOK_SECRET` so success/failure events can be processed securely.
+
+### 7. Reminder Job
+Vercel cron triggers:
+
+```text
+/api/payment-reminders
+```
+
+every 30 minutes (configured in `vercel.json`) and sends reminder emails to users who entered checkout but have not paid.
 
 ## User Flow
 

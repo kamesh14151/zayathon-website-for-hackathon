@@ -32,6 +32,7 @@ import {
 
 interface Registration {
   id: string;
+  team_id?: string;
   team_name: string;
   team_members: Array<{ name: string; email: string }>;
   contact_email: string;
@@ -40,6 +41,7 @@ interface Registration {
   year_of_study: string;
   problem_statement: string;
   status: 'pending' | 'approved' | 'rejected';
+  payment_status?: string;
   payment_screenshot?: string;
   created_at: string;
 }
@@ -68,6 +70,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('all');
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('registrations');
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
@@ -92,6 +95,7 @@ const Admin = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingReg, setEditingReg] = useState<Registration | null>(null);
   const [editForm, setEditForm] = useState({
+    team_id: '',
     team_name: '',
     contact_email: '',
     contact_phone: '',
@@ -306,12 +310,10 @@ const Admin = () => {
 
       // Try direct update with explicit RLS bypass using service role would be ideal
       // But since we're using anon key, we need to ensure policies allow it
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('registrations')
         .update({ status: 'approved', updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
       
       if (error) {
         console.error('Error approving registration:', error);
@@ -335,7 +337,7 @@ const Admin = () => {
         // Revert optimistic update
         await fetchRegistrations();
       } else {
-        console.log('Approval successful:', data);
+        console.log('Approval successful for registration:', id);
         toast({ title: 'Success', description: 'Registration approved!' });
         // Fetch fresh data to ensure consistency
         await fetchRegistrations();
@@ -370,12 +372,10 @@ const Admin = () => {
         prev.map(reg => reg.id === id ? { ...reg, status: 'rejected' as const } : reg)
       );
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('registrations')
         .update({ status: 'rejected', updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
       
       if (error) {
         console.error('Error rejecting registration:', error);
@@ -399,7 +399,7 @@ const Admin = () => {
         // Revert optimistic update
         await fetchRegistrations();
       } else {
-        console.log('Rejection successful:', data);
+        console.log('Rejection successful for registration:', id);
         toast({ title: 'Success', description: 'Registration rejected!' });
         // Fetch fresh data to ensure consistency
         await fetchRegistrations();
@@ -424,6 +424,7 @@ const Admin = () => {
   const handleEditRegistration = (reg: Registration) => {
     setEditingReg(reg);
     setEditForm({
+      team_id: reg.team_id || '',
       team_name: reg.team_name,
       contact_email: reg.contact_email,
       contact_phone: reg.contact_phone,
@@ -528,8 +529,34 @@ const Admin = () => {
   };
 
   const handleSendEmail = async (email: string) => {
-    toast({ title: 'Email Sent', description: `Email sent to ${email}` });
-    // In production, integrate with email service like Resend, SendGrid, etc.
+    try {
+      const response = await fetch('/api/admin-send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: email,
+          subject: 'Zayathon Admin Update',
+          message: 'This is an update from the Zayathon admin team regarding your registration.',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Failed to send email');
+      }
+
+      toast({
+        title: 'Email Sent',
+        description: `Email sent to ${email}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Email Failed',
+        description: error?.message || 'Unable to send email right now.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleBroadcastEmail = async () => {
@@ -538,8 +565,9 @@ const Admin = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ['Team Name', 'Leader Name', 'Email', 'Phone', 'College', 'Year', 'Problem Statement', 'Status', 'Payment Status', 'Created At'];
+    const headers = ['Team ID', 'Team Name', 'Leader Name', 'Email', 'Phone', 'College', 'Year', 'Problem Statement', 'Status', 'Payment Status', 'Created At'];
     const rows = registrations.map((reg) => [
+      reg.team_id || '',
       reg.team_name,
       reg.team_members?.[0]?.name || '',
       reg.contact_email,
@@ -548,7 +576,7 @@ const Admin = () => {
       reg.year_of_study,
       reg.problem_statement,
       reg.status,
-      reg.payment_screenshot ? 'Paid' : 'Pending',
+      reg.payment_status || (reg.payment_screenshot ? 'payment_success' : 'payment_pending'),
       reg.created_at,
     ]);
 
@@ -562,17 +590,23 @@ const Admin = () => {
 
   const filteredRegistrations = registrations.filter((reg) => {
     const searchLower = searchTerm.toLowerCase();
-    return (
+    const matchesSearch = (
+      reg.team_id?.toLowerCase().includes(searchLower) ||
       reg.team_name?.toLowerCase().includes(searchLower) ||
       reg.contact_email?.toLowerCase().includes(searchLower) ||
       reg.institution?.toLowerCase().includes(searchLower)
     );
+
+    const normalizedPaymentStatus = (reg.payment_status || (reg.payment_screenshot ? 'payment_success' : 'payment_pending')).toLowerCase();
+    const matchesPaymentStatus = paymentStatusFilter === 'all' || normalizedPaymentStatus === paymentStatusFilter;
+
+    return matchesSearch && matchesPaymentStatus;
   });
 
   const approvedCount = registrations.filter(r => r.status === 'approved').length;
   const pendingCount = registrations.filter(r => r.status === 'pending').length;
   const rejectedCount = registrations.filter(r => r.status === 'rejected').length;
-  const paidCount = registrations.filter(r => r.payment_screenshot).length;
+  const paidCount = registrations.filter(r => (r.payment_status || '').toLowerCase() === 'payment_success' || !!r.payment_screenshot).length;
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -667,7 +701,7 @@ const Admin = () => {
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Registrations</CardTitle>
-                  <CardDescription>Manage team registrations</CardDescription>
+                  <CardDescription>Manage team registrations. Email button sends a manual update email to that team contact.</CardDescription>
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={handleBroadcastEmail} variant="outline">
@@ -680,16 +714,33 @@ const Admin = () => {
               </CardHeader>
               <CardContent>
                 <div className="mb-6">
-                  <Label htmlFor="search" className="sr-only">Search</Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="search"
-                      placeholder="Search by team name, email, college..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <div className="relative md:col-span-2">
+                      <Label htmlFor="search" className="sr-only">Search</Label>
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="search"
+                        placeholder="Search by team ID, team name, email, college..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Payment Status</Label>
+                      <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All Payment States" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Payment States</SelectItem>
+                          <SelectItem value="checkout_initialized">Checkout Initialized</SelectItem>
+                          <SelectItem value="payment_pending">Payment Pending</SelectItem>
+                          <SelectItem value="payment_success">Payment Success</SelectItem>
+                          <SelectItem value="payment_failed">Payment Failed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
 
@@ -711,6 +762,7 @@ const Admin = () => {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2 flex-wrap">
                               <h3 className="font-semibold text-lg">{reg.team_name}</h3>
+                              {reg.team_id ? <Badge variant="outline">{reg.team_id}</Badge> : null}
                               <Badge variant={
                                 reg.status === 'approved' ? 'default' :
                                 reg.status === 'rejected' ? 'destructive' : 'secondary'
@@ -746,6 +798,9 @@ const Admin = () => {
                               </p>
                               <p>
                                 <span className="font-medium">Year:</span> {reg.year_of_study || '-'}
+                              </p>
+                              <p>
+                                <span className="font-medium">Payment Status:</span> {reg.payment_status || (reg.payment_screenshot ? 'payment_success' : 'payment_pending')}
                               </p>
                             </div>
                             <p className="text-sm text-muted-foreground mt-2">
@@ -1198,55 +1253,66 @@ const Admin = () => {
 
       {/* Edit Registration Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg p-4 sm:p-5">
           <DialogHeader>
             <DialogTitle>Edit Registration</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
+          <div className="grid gap-3 md:grid-cols-2 max-h-[72vh] overflow-y-auto pr-1">
+            <div className="space-y-1 md:col-span-2">
+              <Label>Team ID</Label>
+              <Input value={editForm.team_id || 'Auto-generated'} disabled />
+            </div>
+            <div className="space-y-1 md:col-span-2">
               <Label>Team Name</Label>
               <Input value={editForm.team_name} onChange={(e) => setEditForm({ ...editForm, team_name: e.target.value })} />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1 md:col-span-2">
               <Label>Email</Label>
               <Input value={editForm.contact_email} onChange={(e) => setEditForm({ ...editForm, contact_email: e.target.value })} />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label>Phone</Label>
               <Input value={editForm.contact_phone} onChange={(e) => setEditForm({ ...editForm, contact_phone: e.target.value })} />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label>College</Label>
               <Input value={editForm.institution} onChange={(e) => setEditForm({ ...editForm, institution: e.target.value })} />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label>Year</Label>
-              <select
-                className="w-full p-2 border rounded"
-                value={editForm.year_of_study}
-                onChange={(e) => setEditForm({ ...editForm, year_of_study: e.target.value })}
+              <Select
+                value={editForm.year_of_study || ''}
+                onValueChange={(value) => setEditForm({ ...editForm, year_of_study: value })}
               >
-                <option value="">Select year</option>
-                <option value="1">1st Year</option>
-                <option value="2">2nd Year</option>
-                <option value="3">3rd Year</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select year" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1st Year</SelectItem>
+                  <SelectItem value="2">2nd Year</SelectItem>
+                  <SelectItem value="3">3rd Year</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
+              <Label>Status</Label>
+              <Select
+                value={editForm.status}
+                onValueChange={(value: 'pending' | 'approved' | 'rejected') => setEditForm({ ...editForm, status: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1 md:col-span-2">
               <Label>Problem Statement</Label>
               <Input value={editForm.problem_statement} onChange={(e) => setEditForm({ ...editForm, problem_statement: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <select
-                className="w-full p-2 border rounded"
-                value={editForm.status}
-                onChange={(e) => setEditForm({ ...editForm, status: e.target.value as any })}
-              >
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-              </select>
             </div>
           </div>
           <DialogFooter>

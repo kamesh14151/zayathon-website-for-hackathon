@@ -1,6 +1,11 @@
 # Zayathon Hub
 
-A Vite + React + TypeScript single-page site for the Zayathon 2026 hackathon, styled with Tailwind CSS and animated with Framer Motion. Supabase is used for storing registrations submitted from the on-page form.
+A revamped Vite + React + TypeScript single-page site for the Zayathon 2026 hackathon, styled with Tailwind CSS and animated with Framer Motion. Supabase is used for storing registrations submitted from the on-page form.
+
+## Revamp Credits
+
+- Revamped by AJ STUDIOZ.
+- Public brand favicon/logo added at `public/favicon.png` (AJ STUDIOZ logo).
 
 ## Features
 
@@ -65,3 +70,7 @@ npm test
 ## Deployment
 
 Build the site (`npm run build`) and deploy the `dist/` output to any static host (Vercel, Netlify, etc.). Ensure Supabase environment variables are set in your deployment platform.
+
+## Payment Setup
+
+For payment lifecycle/webhook/reminder setup details, see `PAYMENT_SETUP_README.md`.

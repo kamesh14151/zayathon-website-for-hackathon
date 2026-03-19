@@ -52,7 +52,7 @@ const PaymentPage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          lookupKey: "basic",
+          registrationId,
           customer: { email, name: fullName },
         }),
       });
