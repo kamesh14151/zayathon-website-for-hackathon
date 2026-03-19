@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import BrandWordmark from "@/components/BrandWordmark";
 
 const sponsors = {
   platinum: [
@@ -83,7 +84,7 @@ const Sponsors = () => {
             Our <span className="text-gradient">Sponsors</span>
           </h2>
           <p className="section-subtitle">
-            We're proud to partner with industry leaders who make Zayathon possible.
+            We're proud to partner with industry leaders who make <BrandWordmark /> possible.
           </p>
         </motion.div>
 
@@ -147,7 +148,7 @@ const Sponsors = () => {
           className="text-center mt-20 pt-16 border-t border-border"
         >
           <p className="text-muted-foreground text-lg mb-6">
-            Interested in sponsoring Zayathon?
+            Interested in sponsoring <BrandWordmark />?
           </p>
           <motion.a
             href="mailto:director@zayathon.in"

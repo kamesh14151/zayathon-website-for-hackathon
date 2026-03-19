@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import CountdownTimer from "./CountdownTimer";
+import BrandWordmark from "@/components/BrandWordmark";
 
 const Hero = () => {
   return (
@@ -37,10 +38,10 @@ const Hero = () => {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.6 }}
-            className="font-display font-semibold text-foreground mb-6"
+            className="font-semibold mb-6"
             style={{ fontSize: "clamp(3.5rem, 10vw, 8rem)", letterSpacing: "-0.05em", lineHeight: 0.95 }}
           >
-            ZAYATHON
+            <BrandWordmark />
           </motion.h1>
 
           {/* Sub-headline */}

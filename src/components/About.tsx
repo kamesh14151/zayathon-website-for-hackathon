@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Code, Users, Trophy, Rocket } from "lucide-react";
+import BrandWordmark from "@/components/BrandWordmark";
 
 const features = [
   {
@@ -36,7 +37,7 @@ const About = () => {
           className="mb-20"
         >
           <h2 className="section-title">
-            About <span className="text-gradient">Zayathon</span>
+            About <BrandWordmark />
           </h2>
           <p className="section-subtitle">
             Join the most anticipated hackathon of the year. Open to all students from 1st to 3rd year.

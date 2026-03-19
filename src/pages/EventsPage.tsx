@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import SectionPageLayout from "@/components/SectionPageLayout";
+import BrandWordmark from "@/components/BrandWordmark";
 
 const EventsPage = () => {
   return (
@@ -19,7 +20,7 @@ const EventsPage = () => {
             transition={{ delay: 0.08 }}
             className="text-lg text-muted-foreground leading-relaxed mb-10"
           >
-            Explore all official Zayathon activities, from opening ceremony and mentoring rounds
+            Explore all official <BrandWordmark /> activities, from opening ceremony and mentoring rounds
             to final presentations and the award ceremony.
           </motion.p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

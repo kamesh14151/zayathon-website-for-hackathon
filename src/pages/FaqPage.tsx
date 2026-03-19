@@ -1,5 +1,18 @@
 import { motion } from "framer-motion";
 import SectionPageLayout from "@/components/SectionPageLayout";
+import BrandWordmark from "@/components/BrandWordmark";
+
+const renderBrandWordmark = (text: string) => {
+  return text.split(/(ZAYATHON|Zayathon|ZayaThon)/g).map((part, index) => {
+    if (part === "ZAYATHON" || part === "Zayathon" || part === "ZayaThon") {
+      return (
+        <BrandWordmark key={`${part}-${index}`} />
+      );
+    }
+
+    return part;
+  });
+};
 
 const faqs = [
   {
@@ -42,8 +55,8 @@ const FaqPage = () => {
                 transition={{ delay: index * 0.06 }}
                 className="glow-card p-7"
               >
-                <h2 className="font-display text-2xl text-foreground mb-2">{item.question}</h2>
-                <p className="text-muted-foreground leading-relaxed">{item.answer}</p>
+                <h2 className="font-display text-2xl text-foreground mb-2">{renderBrandWordmark(item.question)}</h2>
+                <p className="text-muted-foreground leading-relaxed">{renderBrandWordmark(item.answer)}</p>
               </motion.article>
             ))}
           </div>

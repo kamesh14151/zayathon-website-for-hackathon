@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
+import BrandWordmark from "@/components/BrandWordmark";
 
 const navItems = [
   { name: "Home", href: "/" },
@@ -47,13 +48,11 @@ const Navbar = () => {
                 isCompact ? "h-8" : "h-10"
               }`}
             />
-            <span
-              className={`font-black tracking-[0.18em] text-[#161616] transition-all duration-300 ${
-                isCompact ? "text-base" : "text-lg"
+            <BrandWordmark
+              className={`font-black tracking-[0.16em] transition-all duration-300 ${
+                isCompact ? "text-lg" : "text-xl"
               }`}
-            >
-              ZAYATHON
-            </span>
+            />
           </Link>
 
           <div className="hidden lg:flex items-center gap-10">

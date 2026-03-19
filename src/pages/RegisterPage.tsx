@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, Clock, Users, Trophy, MapPin, CheckCircle2 } from 
 import Navbar from "@/components/Navbar";
 import Registration from "@/components/Registration";
 import Footer from "@/components/Footer";
+import BrandWordmark from "@/components/BrandWordmark";
 
 const highlights = [
   { icon: Calendar, label: "Event Date", value: "February 15–16, 2026" },
@@ -71,7 +72,7 @@ const RegisterPage = () => {
                   className="font-display font-normal text-foreground mb-4"
                   style={{ fontSize: "clamp(2.5rem, 6vw, 4rem)", letterSpacing: "-0.03em", lineHeight: 1.05 }}
                 >
-                  Join Zayathon<br />2026
+                  Join <BrandWordmark /><br />2026
                 </motion.h1>
 
                 <motion.p

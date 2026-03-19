@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Linkedin, Twitter, Github } from "lucide-react";
+import BrandWordmark from "@/components/BrandWordmark";
 import organizer1 from "../assets/organizer-1.jpg";
 import organizer2 from "../assets/organizer-2.jpeg";
 import organizer3 from "../assets/organizer-3.jpeg";
@@ -47,7 +48,7 @@ const Team = () => {
             Our <span className="text-gradient">Team</span>
           </h2>
           <p className="section-subtitle">
-            Meet the passionate individuals behind Zayathon who work tirelessly to make this event a success.
+            Meet the passionate individuals behind <BrandWordmark /> who work tirelessly to make this event a success.
           </p>
         </motion.div>
 

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BrandWordmark from "@/components/BrandWordmark";
 
 const detailsGroups = [
   {
@@ -41,10 +42,10 @@ const Details = () => {
         <section className="container mx-auto px-4 md:px-6">
           <div className="max-w-3xl mb-12">
             <h1 className="font-display text-5xl md:text-6xl tracking-tight text-foreground mb-4">
-              Explore Zayathon
+              Explore <BrandWordmark />
             </h1>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Zayathon is a student-first hackathon focused on solving real-world problems with practical,
+              <BrandWordmark /> is a student-first hackathon focused on solving real-world problems with practical,
               high-impact solutions. This page gives you a quick overview and direct access to every dedicated section.
             </p>
           </div>

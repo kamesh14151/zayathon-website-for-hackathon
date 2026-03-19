@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Lock, Loader2 } from 'lucide-react';
 import { ADMIN_SESSION_KEY, isAdminCredentials } from '@/lib/adminAuth';
+import BrandWordmark from '@/components/BrandWordmark';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -93,7 +94,7 @@ const AdminLogin = () => {
                 Welcome back!
               </h1>
               <p className="text-[#718095] text-[1.62rem] leading-[1.2] font-normal">
-                Login to your Zayathon admin dashboard
+                Login to your <BrandWordmark /> admin dashboard
               </p>
             </div>
 

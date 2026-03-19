@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import SectionPageLayout from "@/components/SectionPageLayout";
+import BrandWordmark from "@/components/BrandWordmark";
 
 const CommunityPage = () => {
   return (
@@ -11,7 +12,7 @@ const CommunityPage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="section-title text-left mb-6"
           >
-            Zayathon Community
+            <BrandWordmark /> Community
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 18 }}

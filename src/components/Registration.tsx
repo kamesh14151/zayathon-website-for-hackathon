@@ -13,6 +13,7 @@ import {
 import { CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { addRegistration } from "../integrations/supabase/client";
+import BrandWordmark from "@/components/BrandWordmark";
 
 const Registration = () => {
   const { toast } = useToast();
@@ -233,7 +234,7 @@ const Registration = () => {
             Register Your <span className="text-gradient">Team</span>
           </h2>
           <p className="section-subtitle">
-            Ready to take on the challenge? Register your team now and be part of Zayathon 2026!
+            Ready to take on the challenge? Register your team now and be part of <BrandWordmark /> 2026!
             Open for students up to 3rd year.
           </p>
         </motion.div>
@@ -497,7 +498,7 @@ const Registration = () => {
                 Registration Successful!
               </h3>
               <p className="text-muted-foreground mb-6">
-                Thank you for registering for Zayathon 2026. We'll send you a confirmation
+                Thank you for registering for <BrandWordmark /> 2026. We'll send you a confirmation
                 email with further details about team selection and problem statements.
               </p>
               <motion.button
