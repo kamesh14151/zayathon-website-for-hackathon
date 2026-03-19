@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getRegistrations, getRegistrationCount, supabase } from '../integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { RegistrationFlipCard } from '@/components/RegistrationFlipCard';
 import {
   Card, CardContent, CardHeader, CardTitle, CardDescription
 } from '@/components/ui/card';
@@ -30,7 +31,7 @@ import {
 import {
   Users, Download, RefreshCw, Search, LogOut, Check, X,
   Trophy, Mail, BarChart3, Plus, Edit, Trash2, Send, Image, CalendarDays, SlidersHorizontal,
-  CreditCard, Wallet, TrendingUp, Globe2
+  CreditCard, Wallet, TrendingUp, Globe2, LayoutGrid, Rows3
 } from 'lucide-react';
 import { ADMIN_EMAIL, ADMIN_SESSION_KEY } from '@/lib/adminAuth';
 import {
@@ -106,6 +107,7 @@ const Admin = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('all');
+  const [registrationView, setRegistrationView] = useState<'list' | 'cards'>('list');
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('registrations');
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
@@ -996,6 +998,31 @@ const Admin = () => {
                       Clear
                     </Button>
                   </div>
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <p className="text-xs text-muted-foreground">
+                      {filteredRegistrations.length} registration{filteredRegistrations.length === 1 ? '' : 's'}
+                    </p>
+                    <div className="inline-flex rounded-lg border bg-background p-1">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={registrationView === 'list' ? 'default' : 'ghost'}
+                        className="h-8 px-3"
+                        onClick={() => setRegistrationView('list')}
+                      >
+                        <Rows3 className="w-4 h-4 mr-1.5" />List
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={registrationView === 'cards' ? 'default' : 'ghost'}
+                        className="h-8 px-3"
+                        onClick={() => setRegistrationView('cards')}
+                      >
+                        <LayoutGrid className="w-4 h-4 mr-1.5" />Cards
+                      </Button>
+                    </div>
+                  </div>
                 </div>
 
                 {loading ? (
@@ -1009,8 +1036,20 @@ const Admin = () => {
                     <p className="text-muted-foreground">No registrations found</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {filteredRegistrations.map((reg) => (
+                  <div className={registrationView === 'cards' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-2" : "space-y-4"}>
+                    {filteredRegistrations.map((reg) => registrationView === 'cards' ? (
+                      <div key={reg.id} className="h-[300px] w-full">
+                        <RegistrationFlipCard
+                          registration={reg}
+                          onApprove={() => handleApproveRegistration(reg.id)}
+                          onReject={() => handleRejectRegistration(reg.id)}
+                          onEmail={() => window.open(`mailto:${reg.contact_email}`, '_blank')}
+                          onEdit={handleEditRegistration}
+                          onDelete={setRegistrationToDelete}
+                          isProcessing={processingIds.has(reg.id)}
+                        />
+                      </div>
+                    ) : ( 
                       <div key={reg.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
                         {(() => {
                           const statusDisplay = reg.status === 'approved'
