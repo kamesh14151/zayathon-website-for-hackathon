@@ -21,28 +21,52 @@ export default async function handler(req, res) {
       ...(process.env.VITE_APP_URL ? { return_url: process.env.VITE_APP_URL } : { return_url: 'https://zayathon.in' })
     };
 
-    // Use standard Fetch API since @dodopayments SDK depends on Node/Next specifically
-    const dodoResponse = await fetch(
-      process.env.DODO_PAYMENTS_ENVIRONMENT === 'live_mode' 
-        ? 'https://api.dodopayments.com/payments' 
-        : 'https://test-api.dodopayments.com/payments', 
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.DODO_PAYMENTS_API_KEY}`
-        },
-        body: JSON.stringify(dodoPayload)
+    const configuredBaseUrl = String(process.env.DODO_PAYMENTS_BASE_URL || '').trim();
+    const endpointCandidates = configuredBaseUrl
+      ? [`${configuredBaseUrl.replace(/\/$/, '')}/payments`]
+      : process.env.DODO_PAYMENTS_ENVIRONMENT === 'live_mode'
+        ? ['https://api.dodopayments.com/payments']
+        : [
+            // Most accounts (including test mode keys) use the main API host.
+            'https://api.dodopayments.com/payments',
+            // Kept as fallback for older setups.
+            'https://test-api.dodopayments.com/payments',
+          ];
+
+    let lastError;
+
+    for (const endpoint of endpointCandidates) {
+      try {
+        const dodoResponse = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.DODO_PAYMENTS_API_KEY}`
+          },
+          body: JSON.stringify(dodoPayload)
+        });
+
+        const rawText = await dodoResponse.text();
+        let dodoData = {};
+        try {
+          dodoData = rawText ? JSON.parse(rawText) : {};
+        } catch {
+          dodoData = { message: rawText || 'Unexpected Dodo API response' };
+        }
+
+        if (!dodoResponse.ok) {
+          return res
+            .status(dodoResponse.status)
+            .json({ error: dodoData.message || dodoData.error || 'Failed to create checkout' });
+        }
+
+        return res.status(200).json(dodoData);
+      } catch (error) {
+        lastError = error;
       }
-    );
-
-    const dodoData = await dodoResponse.json();
-
-    if (!dodoResponse.ok) {
-      return res.status(dodoResponse.status).json({ error: dodoData.message || 'Failed to create checkout' });
     }
 
-    return res.status(200).json(dodoData);
+    throw lastError || new Error('Failed to reach Dodo API endpoint');
   } catch (error) {
     console.error('Error creating Dodo checkout session:', error);
     return res.status(500).json({ error: 'Failed to create Dodo checkout session' });

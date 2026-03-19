@@ -18,10 +18,12 @@ import CommunityPage from "./pages/CommunityPage";
 import EventsPage from "./pages/EventsPage";
 import FaqPage from "./pages/FaqPage";
 import GuidelinesPage from "./pages/GuidelinesPage";
+import ConsentRuntime from "@/components/ConsentRuntime";
 
 function App() {
   return (
     <Router>
+      <ConsentRuntime />
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/details" element={<Details />} />
