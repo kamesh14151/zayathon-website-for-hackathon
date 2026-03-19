@@ -37,16 +37,23 @@ const Navbar = () => {
         >
           <Link
             to="/"
-            className="inline-flex items-center"
+            className="inline-flex items-center gap-2.5"
             aria-label="ZAYATHON Home"
           >
             <img
               src="/zaya.png"
-              alt="ZAYATHON"
+              alt="ZAYATHON logo"
               className={`w-auto transition-all duration-300 ${
                 isCompact ? "h-8" : "h-10"
               }`}
             />
+            <span
+              className={`font-black tracking-[0.18em] text-[#161616] transition-all duration-300 ${
+                isCompact ? "text-base" : "text-lg"
+              }`}
+            >
+              ZAYATHON
+            </span>
           </Link>
 
           <div className="hidden lg:flex items-center gap-10">

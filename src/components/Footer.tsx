@@ -12,7 +12,9 @@ const Footer = () => {
               whileHover={{ scale: 1.04 }}
             >
               <Link to="/" className="inline-flex items-center" aria-label="ZAYATHON Home">
-                <img src="/zaya.png" alt="ZAYATHON" className="h-10 w-auto" />
+                <span className="text-2xl md:text-[30px] font-black tracking-[0.24em] text-white drop-shadow-[0_0_14px_rgba(255,255,255,0.12)]">
+                  ZAYATHON
+                </span>
               </Link>
             </motion.div>
           </div>
