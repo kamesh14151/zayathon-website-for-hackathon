@@ -1,100 +1,75 @@
 import { motion } from "framer-motion";
-import { Heart, Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="py-16 border-t border-border relative bg-background">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          {/* Logo & Description */}
-          <div className="md:col-span-2">
-            <motion.a
-              href="#home"
-              className="font-body text-3xl font-semibold text-foreground inline-block mb-4"
-              whileHover={{ scale: 1.05 }}
+    <footer className="relative bg-[#0d0d0f] text-white pt-16 pb-10 mt-16">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10">
+          <div className="lg:col-span-1">
+            <motion.div
+              whileHover={{ scale: 1.04 }}
             >
-              ZAYATHON
-            </motion.a>
-            <p className="text-foreground/80 mb-4 max-w-md">
-              The ultimate hackathon experience for students. Join us to build, innovate,
-              and win amazing prizes while solving real-world problems.
-            </p>
-            <div className="flex gap-4">
-              {["Twitter", "LinkedIn", "Instagram", "Discord"].map((social) => (
-                <motion.a
-                  key={social}
-                  href="#"
-                  whileHover={{ scale: 1.1, y: -3 }}
-                  className="w-10 h-10 rounded-full bg-foreground/5 border border-border flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-background/20 transition-colors text-sm"
-                >
-                  {social[0]}
-                </motion.a>
-              ))}
-            </div>
+              <Link to="/" className="inline-flex items-center" aria-label="ZAYATHON Home">
+                <img src="/zaya.png" alt="ZAYATHON" className="h-10 w-auto" />
+              </Link>
+            </motion.div>
           </div>
 
-          {/* Quick Links */}
           <div>
-            <h4 className="font-display text-lg font-normal text-foreground mb-4">
-              Quick Links
-            </h4>
-            <ul className="space-y-2">
-              {["About", "Prizes", "Timeline", "Sponsors", "Team"].map(
-                (link) => (
-                  <li key={link}>
-                    <Link
-                      to={`/details#${link.toLowerCase()}`}
-                      className="text-foreground/70 hover:text-foreground transition-colors"
-                    >
-                      {link}
-                    </Link>
-                  </li>
-                )
-              )}
-              <li>
-                <Link
-                  to="/register"
-                  className="text-foreground/70 hover:text-foreground transition-colors"
-                >
-                  Register
-                </Link>
-              </li>
+            <h4 className="text-lg font-semibold mb-4 text-white">Products</h4>
+            <ul className="space-y-3 text-white/75">
+              <li><Link to="/register" className="hover:text-white transition-colors">Register</Link></li>
+              <li><Link to="/payment" className="hover:text-white transition-colors">Payment Portal</Link></li>
+              <li><Link to="/prizes" className="hover:text-white transition-colors">Prize Pool</Link></li>
+              <li><Link to="/timeline" className="hover:text-white transition-colors">Timeline</Link></li>
+              <li><Link to="/sponsors" className="hover:text-white transition-colors">Sponsors</Link></li>
             </ul>
           </div>
 
-          {/* Contact */}
           <div>
-            <h4 className="font-display text-lg font-normal text-foreground mb-4">
-              Contact Us
-            </h4>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-3 text-foreground/70">
-                <Mail className="w-4 h-4 text-foreground/70" />
-                <a href="mailto:contact@zayathon.com" className="hover:text-foreground transition-colors">
-                  zayacodehub@gmail.com
-                </a>
+            <h4 className="text-lg font-semibold mb-4 text-white">Hackathon</h4>
+            <ul className="space-y-3 text-white/75">
+              <li><Link to="/about" className="hover:text-white transition-colors">About Zayathon</Link></li>
+              <li><Link to="/problem-statements" className="hover:text-white transition-colors">Problem Statements</Link></li>
+              <li><Link to="/team" className="hover:text-white transition-colors">Organizing Team</Link></li>
+              <li><Link to="/guidelines" className="hover:text-white transition-colors">Participation Guide</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold mb-4 text-white">Resources</h4>
+            <ul className="space-y-3 text-white/75">
+              <li><Link to="/community" className="hover:text-white transition-colors">Community</Link></li>
+              <li><Link to="/events" className="hover:text-white transition-colors">Events</Link></li>
+              <li><Link to="/faq" className="hover:text-white transition-colors">FAQs</Link></li>
+              <li><Link to="/guidelines" className="hover:text-white transition-colors">Guidelines</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold mb-4 text-white">Help & Contact</h4>
+            <ul className="space-y-3 text-white/75">
+              <li className="flex items-center gap-3">
+                <Mail className="w-4 h-4 text-white/70" />
+                <a href="mailto:zayacodehub@gmail.com" className="hover:text-white transition-colors">zayacodehub@gmail.com</a>
               </li>
-              <li className="flex items-center gap-3 text-foreground/70">
-                <Phone className="w-4 h-4 text-foreground/70" />
-                <span>+917033399183</span>
+              <li className="flex items-center gap-3">
+                <Phone className="w-4 h-4 text-white/70" />
+                <span>+91 70333 99183</span>
               </li>
-              <li className="flex items-start gap-3 text-foreground/70">
-                <MapPin className="w-4 h-4 text-foreground/70 mt-1" />
-                <span>SONA COLLEGE OF TECHNOLOGY,<br />SALEM TAMIL NADU, India</span>
+              <li className="flex items-start gap-3">
+                <MapPin className="w-4 h-4 text-white/70 mt-1" />
+                <span>SONA College of Technology, Salem, Tamil Nadu, India</span>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-foreground/70 text-sm">
-            © 2026 Zaya Code Hub. All rights reserved.
-          </p>
-          <p className="text-foreground/70 text-sm flex items-center gap-2">
-            Made with <Heart className="w-4 h-4 text-foreground" /> by the Zayathon Team
-          </p>
+        <div className="border-t border-white/10 mt-12 pt-6 flex flex-col md:flex-row gap-4 md:items-center md:justify-between text-sm text-white/60">
+          <p>© 2026 Zaya Code Hub. All rights reserved.</p>
+          <p>Terms | Privacy policy | Responsible disclosure</p>
         </div>
       </div>
     </footer>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { getRegistrations, getRegistrationCount, supabase } from '../integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -18,8 +19,16 @@ import {
 } from '@/components/ui/select';
 import {
   Users, Download, RefreshCw, Search, LogOut, Check, X,
-  Trophy, Mail, BarChart3, Plus, Edit, Trash2, Send, Image
+  Trophy, Mail, BarChart3, Plus, Edit, Trash2, Send, Image, CalendarDays
 } from 'lucide-react';
+import { ADMIN_EMAIL, ADMIN_SESSION_KEY } from '@/lib/adminAuth';
+import {
+  DEFAULT_TIMELINE_EVENTS,
+  getTimelineEvents,
+  saveTimelineEvents,
+  type EditableTimelineEvent,
+  type TimelineEventStatus,
+} from '@/lib/timelineConfig';
 
 interface Registration {
   id: string;
@@ -62,6 +71,10 @@ const Admin = () => {
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('registrations');
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [timelineEvents, setTimelineEvents] = useState<EditableTimelineEvent[]>([]);
+  const [timelineLoading, setTimelineLoading] = useState(true);
+  const [timelineSaving, setTimelineSaving] = useState(false);
 
   // Problem Statements State
   const [problemStatements, setProblemStatements] = useState<ProblemStatement[]>([]);
@@ -118,6 +131,13 @@ const Admin = () => {
   }, []);
 
   const checkAuth = async () => {
+    const hasLocalAdminSession = localStorage.getItem(ADMIN_SESSION_KEY) === 'true';
+    if (hasLocalAdminSession) {
+      setUser({ email: ADMIN_EMAIL });
+      fetchAllData();
+      return;
+    }
+
     // Development bypass - remove this in production
     const isDev = import.meta.env.DEV;
     
@@ -136,12 +156,23 @@ const Admin = () => {
       await Promise.all([
         fetchRegistrations(),
         fetchProblemStatements(),
-        fetchWinners()
+        fetchWinners(),
+        fetchTimelineEvents(),
       ]);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTimelineEvents = async () => {
+    setTimelineLoading(true);
+    try {
+      const events = await getTimelineEvents();
+      setTimelineEvents(events);
+    } finally {
+      setTimelineLoading(false);
     }
   };
 
@@ -189,8 +220,75 @@ const Admin = () => {
   };
 
   const handleLogout = async () => {
+    localStorage.removeItem(ADMIN_SESSION_KEY);
     await supabase.auth.signOut();
     navigate('/login');
+  };
+
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await fetchRegistrations();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleTimelineFieldChange = (
+    id: string,
+    field: 'date' | 'time' | 'title' | 'description',
+    value: string
+  ) => {
+    setTimelineEvents((prev) =>
+      prev.map((event) => (event.id === id ? { ...event, [field]: value } : event))
+    );
+  };
+
+  const handleTimelineStatusChange = (id: string, status: TimelineEventStatus) => {
+    setTimelineEvents((prev) =>
+      prev.map((event) => (event.id === id ? { ...event, status } : event))
+    );
+  };
+
+  const handleSaveTimeline = async () => {
+    setTimelineSaving(true);
+    try {
+      const result = await saveTimelineEvents(timelineEvents);
+      if (!result.success) {
+        toast({
+          title: 'Save Failed',
+          description: result.error || 'Failed to save timeline updates.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({ title: 'Timeline Updated', description: 'Public timeline has been updated successfully.' });
+    } finally {
+      setTimelineSaving(false);
+    }
+  };
+
+  const handleResetTimeline = async () => {
+    const resetEvents = DEFAULT_TIMELINE_EVENTS.map((event) => ({ ...event }));
+    setTimelineEvents(resetEvents);
+    setTimelineSaving(true);
+    try {
+      const result = await saveTimelineEvents(resetEvents);
+      if (!result.success) {
+        toast({
+          title: 'Reset Failed',
+          description: result.error || 'Failed to reset timeline.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({ title: 'Timeline Reset', description: 'Timeline restored to default event values.' });
+    } finally {
+      setTimelineSaving(false);
+    }
   };
 
   const handleApproveRegistration = async (id: string) => {
@@ -485,9 +583,21 @@ const Admin = () => {
             <p className="text-muted-foreground">Manage your hackathon</p>
           </div>
           <div className="flex gap-4 items-center">
-            <Button onClick={fetchRegistrations} variant="outline" size="sm">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
+            <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isRefreshing}>
+              <motion.span
+                className="inline-flex mr-2"
+                animate={isRefreshing ? { rotate: 360 } : { rotate: 0 }}
+                transition={
+                  isRefreshing
+                    ? { duration: 0.9, repeat: Infinity, ease: 'linear' }
+                    : { type: 'spring', stiffness: 220, damping: 20 }
+                }
+                whileHover={!isRefreshing ? { rotate: 120 } : undefined}
+                whileTap={!isRefreshing ? { rotate: 220, scale: 0.95 } : undefined}
+              >
+                <RefreshCw className="w-4 h-4" />
+              </motion.span>
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
             </Button>
             <span className="text-sm text-muted-foreground hidden md:inline">{user?.email}</span>
             <Button onClick={handleLogout} variant="outline">
@@ -543,10 +653,11 @@ const Admin = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+          <TabsList className="grid grid-cols-5 w-full max-w-4xl">
             <TabsTrigger value="registrations"><Users className="w-4 h-4 mr-2" />Registrations</TabsTrigger>
             <TabsTrigger value="problems"><Edit className="w-4 h-4 mr-2" />Problems</TabsTrigger>
             <TabsTrigger value="winners"><Trophy className="w-4 h-4 mr-2" />Winners</TabsTrigger>
+            <TabsTrigger value="timeline"><CalendarDays className="w-4 h-4 mr-2" />Timeline</TabsTrigger>
             <TabsTrigger value="analytics"><BarChart3 className="w-4 h-4 mr-2" />Analytics</TabsTrigger>
           </TabsList>
 
@@ -857,6 +968,83 @@ const Admin = () => {
                     <p className="text-center text-muted-foreground py-8">No winners announced yet</p>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Timeline Tab */}
+          <TabsContent value="timeline">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Timeline Controls</CardTitle>
+                  <CardDescription>Edit date, time, and status for events shown on the public timeline page.</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={fetchTimelineEvents} disabled={timelineLoading || timelineSaving}>Reload</Button>
+                  <Button variant="outline" onClick={handleResetTimeline} disabled={timelineLoading || timelineSaving}>Reset Default</Button>
+                  <Button onClick={handleSaveTimeline} disabled={timelineLoading || timelineSaving}>
+                    {timelineSaving ? 'Saving...' : 'Save Timeline'}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {timelineLoading ? (
+                  <p className="text-sm text-muted-foreground">Loading timeline events...</p>
+                ) : (
+                <div className="space-y-4">
+                  {timelineEvents.map((event, index) => (
+                    <div key={event.id} className="border rounded-lg p-4">
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                        <div className="lg:col-span-3 space-y-2">
+                          <Label>Title</Label>
+                          <Input
+                            value={event.title}
+                            onChange={(e) => handleTimelineFieldChange(event.id, 'title', e.target.value)}
+                          />
+                        </div>
+                        <div className="lg:col-span-2 space-y-2">
+                          <Label>Date</Label>
+                          <Input
+                            value={event.date}
+                            onChange={(e) => handleTimelineFieldChange(event.id, 'date', e.target.value)}
+                          />
+                        </div>
+                        <div className="lg:col-span-2 space-y-2">
+                          <Label>Time</Label>
+                          <Input
+                            value={event.time}
+                            onChange={(e) => handleTimelineFieldChange(event.id, 'time', e.target.value)}
+                          />
+                        </div>
+                        <div className="lg:col-span-2 space-y-2">
+                          <Label>Status</Label>
+                          <Select
+                            value={event.status}
+                            onValueChange={(value: TimelineEventStatus) => handleTimelineStatusChange(event.id, value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="completed">Completed</SelectItem>
+                              <SelectItem value="upcoming">Upcoming</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="lg:col-span-3 space-y-2">
+                          <Label>Description</Label>
+                          <Input
+                            value={event.description}
+                            onChange={(e) => handleTimelineFieldChange(event.id, 'description', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-3">Event #{index + 1}</p>
+                    </div>
+                  ))}
+                </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

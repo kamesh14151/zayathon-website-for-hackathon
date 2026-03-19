@@ -1,55 +1,35 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Users, Code, FileCheck, Trophy, CheckCircle2, Clock } from "lucide-react";
+import { Calendar, Users, Code, FileCheck, Trophy, Clock } from "lucide-react";
+import { getTimelineEvents, type EditableTimelineEvent } from "@/lib/timelineConfig";
 
-const timelineEvents = [
-  {
-    date: "Feb 2, 2026",
-    time: "10:00 AM",
-    title: "Registration Opens",
-    description: "Start registering your team and prepare for the ultimate coding challenge.",
-    icon: Calendar,
-    status: "completed",
-    color: "hsl(210 83% 67%)",
-  },
-  {
-    date: "Feb 3, 2026",
-    time: "5:00 PM",
-    title: "Team Selection Announced",
-    description: "Selected teams will be announced. Check your email for confirmation.",
-    icon: Users,
-    status: "completed",
-    color: "hsl(17 47% 58%)",
-  },
-  {
-    date: "Feb 5, 2026",
-    time: "2:00 PM",
-    title: "Problem Statements Released",
-    description: "Choose from 20+ industry-relevant problem statements.",
-    icon: FileCheck,
-    status: "upcoming",
-    color: "hsl(48 11% 88%)",
-  },
-  {
-    date: "Feb 15, 2026",
-    time: "6:00 AM - 4:00 PM",
-    title: "Hackathon Days",
-    description: "10 hours of non-stop coding, mentoring sessions, and workshops.",
-    icon: Code,
-    status: "upcoming",
-    color: "hsl(38 43% 83%)",
-  },
-  {
-    date: "Feb 16, 2026",
-    time: "4:00 PM",
-    title: "Final Judging & Awards",
-    description: "Present your projects and win amazing prizes!",
-    icon: Trophy,
-    status: "upcoming",
-    color: "hsl(17 47% 58%)",
-  },
-];
+const timelineIcons = [Calendar, Users, FileCheck, Code, Trophy];
 
 const Timeline = () => {
+  const [timelineEvents, setTimelineEvents] = useState<EditableTimelineEvent[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadTimeline = async () => {
+      const events = await getTimelineEvents();
+      if (mounted) {
+        setTimelineEvents(events);
+      }
+    };
+
+    loadTimeline();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const completionRatio =
+    timelineEvents.length > 0
+      ? timelineEvents.filter((event) => event.status === "completed").length / timelineEvents.length
+      : 0;
+
   return (
     <section id="timeline" className="py-24 relative bg-background">
       <div className="container mx-auto px-4">
@@ -76,15 +56,18 @@ const Timeline = () => {
           {/* Progress Indicator */}
           <motion.div
             initial={{ scaleY: 0 }}
-            whileInView={{ scaleY: 0.4 }}
+            whileInView={{ scaleY: Math.max(0.08, completionRatio) }}
             viewport={{ once: true }}
             transition={{ duration: 1.5, ease: [0.2, 0.0, 0, 1] }}
             className="absolute left-4 md:left-1/2 top-0 w-px bg-primary md:transform md:-translate-x-1/2 origin-top"
           />
 
-          {timelineEvents.map((event, index) => (
+          {timelineEvents.map((event, index) => {
+            const DateIcon = timelineIcons[index % timelineIcons.length];
+
+            return (
             <motion.div
-              key={event.title}
+              key={event.id}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
@@ -130,7 +113,7 @@ const Timeline = () => {
                         color: event.color,
                       }}
                     >
-                      <Calendar className="w-3 h-3" />
+                      <DateIcon className="w-3 h-3" />
                       {event.date}
                     </motion.span>
                   </div>
@@ -162,12 +145,12 @@ const Timeline = () => {
                     >
                       {event.status === "completed" ? "✓ Completed" : "◯ Upcoming"}
                     </span>
-                    <div className="text-xs font-body text-muted-foreground">Step {index + 1}/5</div>
+                    <div className="text-xs font-body text-muted-foreground">Step {index + 1}/{timelineEvents.length}</div>
                   </div>
                 </motion.div>
               </div>
             </motion.div>
-          ))}
+          )})}
 
           {/* Timeline End Accent */}
           <motion.div

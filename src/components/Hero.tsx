@@ -6,7 +6,7 @@ const Hero = () => {
   return (
     <section
       id="home"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 bg-background"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 bg-background"
     >
       {/* Subtle minimalist radial at top */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-96 bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
