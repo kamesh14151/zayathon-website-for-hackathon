@@ -22,15 +22,24 @@ export default async function handler(req, res) {
     };
 
     const configuredBaseUrl = String(process.env.DODO_PAYMENTS_BASE_URL || '').trim();
+    const envMode = String(process.env.DODO_PAYMENTS_ENVIRONMENT || 'test_mode').trim();
 
-    // Dodo test and live API keys both use the primary API domain.
-    // Only use a custom base URL when explicitly provided.
+    // Dodo environment hosts from docs.
+    const defaultBaseUrl = envMode === 'live_mode'
+      ? 'https://live.dodopayments.com'
+      : 'https://test.dodopayments.com';
+
+    // Keep old host as final fallback for compatibility.
     const endpointCandidates = configuredBaseUrl
       ? [
           `${configuredBaseUrl.replace(/\/$/, '')}/payments`,
+          `${defaultBaseUrl}/payments`,
           'https://api.dodopayments.com/payments',
         ]
-      : ['https://api.dodopayments.com/payments'];
+      : [
+          `${defaultBaseUrl}/payments`,
+          'https://api.dodopayments.com/payments',
+        ];
 
     let lastError;
 
