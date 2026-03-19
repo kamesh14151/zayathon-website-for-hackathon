@@ -122,7 +122,11 @@ Vercel cron triggers:
 /api/payment-reminders
 ```
 
-every 30 minutes (configured in `vercel.json`) and sends reminder emails to users who entered checkout but have not paid.
+once per day at 09:00 UTC (configured in `vercel.json`) and sends reminder emails to users who entered checkout but have not paid.
+
+Note:
+- Vercel Hobby only allows daily cron execution.
+- If you need reminders every 30 minutes, upgrade to Vercel Pro and change the cron expression back to `*/30 * * * *`.
 
 ## User Flow
 
