@@ -1,6 +1,6 @@
-const BRAND_PRIMARY = '#e28664';
-const PANEL_BORDER = '#e5ded0';
-const PANEL_BG = '#f7f5ef';
+const BRAND_PRIMARY = '#111014';
+const PANEL_BORDER = '#e4e7ee';
+const PANEL_BG = '#f8fafc';
 
 const getSiteUrl = () => String(process.env.VITE_APP_URL || 'https://zayathon.in').trim();
 const getResendApiKey = () => String(process.env.RESEND_API_KEY || '').trim();
@@ -27,16 +27,17 @@ const buildTemplate = ({ title, subtitle, greeting, body, ctaText, ctaUrl, recei
     : '';
 
   return `
-    <div style="background:#f6f4ef;padding:28px 16px;font-family:Inter,Segoe UI,Arial,sans-serif;color:#1d1d1d;">
-      <div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid ${PANEL_BORDER};border-radius:18px;overflow:hidden;">
-        <div style="padding:22px 24px;background:#111014;color:#fff;">
+    <div style="background:#f3f5f9;padding:28px 16px;font-family:Inter,Segoe UI,Arial,sans-serif;color:#1d1d1d;">
+      <div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid ${PANEL_BORDER};border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(17,16,20,0.06);">
+        <div style="padding:22px 24px;background:linear-gradient(135deg,#111014 0%,#1f2430 100%);color:#fff;">
+          <p style="margin:0 0 8px 0;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#cfd5df;">Zayathon Payment Desk</p>
           <h1 style="margin:0;font-size:24px;letter-spacing:0.2px;">${title}</h1>
           <p style="margin:8px 0 0 0;color:#d4d2d9;font-size:14px;">${subtitle}</p>
         </div>
 
         <div style="padding:22px 24px;">
           <p style="margin:0 0 14px 0;font-size:16px;">${greeting}</p>
-          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#444c5a;">
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.7;color:#394150;">
             ${body}
           </p>
 
@@ -50,7 +51,7 @@ const buildTemplate = ({ title, subtitle, greeting, body, ctaText, ctaUrl, recei
           </div>
         </div>
 
-        <div style="padding:14px 24px;border-top:1px solid #eee7db;background:#fcfbf8;font-size:12px;color:#7f8898;">
+        <div style="padding:14px 24px;border-top:1px solid #edf1f6;background:#fbfcfe;font-size:12px;color:#7f8898;">
           Need help? Contact zayacodehub@gmail.com<br />
           <a href="${siteUrl}" style="color:#3f5068;text-decoration:none;">${siteUrl}</a>
         </div>

@@ -22,7 +22,7 @@ import ConsentRuntime from "@/components/ConsentRuntime";
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ConsentRuntime />
       <Routes>
         <Route path="/" element={<Index />} />

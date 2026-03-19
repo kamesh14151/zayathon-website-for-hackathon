@@ -15,6 +15,16 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
 import {
@@ -63,6 +73,19 @@ interface Winner {
   prize: string;
 }
 
+const FALLBACK_API_BASE_URL = 'https://zayathon-website-for-hackathon.vercel.app';
+
+const resolveApiUrl = (path: string) => {
+  const configuredBase = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/$/, '');
+  if (configuredBase) return `${configuredBase}${path}`;
+
+  if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+    return path;
+  }
+
+  return `${FALLBACK_API_BASE_URL}${path}`;
+};
+
 const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -94,6 +117,7 @@ const Admin = () => {
   // Edit Registration State
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingReg, setEditingReg] = useState<Registration | null>(null);
+  const [registrationToDelete, setRegistrationToDelete] = useState<Registration | null>(null);
   const [editForm, setEditForm] = useState({
     team_id: '',
     team_name: '',
@@ -297,6 +321,7 @@ const Admin = () => {
 
   const handleApproveRegistration = async (id: string) => {
     if (processingIds.has(id)) return;
+    const targetReg = registrations.find((reg) => reg.id === id);
     
     setProcessingIds(prev => new Set(prev).add(id));
     
@@ -339,6 +364,27 @@ const Admin = () => {
       } else {
         console.log('Approval successful for registration:', id);
         toast({ title: 'Success', description: 'Registration approved!' });
+
+        if (targetReg?.contact_email) {
+          try {
+            await sendAdminEmail({
+              to: targetReg.contact_email,
+              subject: 'Zayathon Registration Approved',
+              message: `Hi ${targetReg.team_members?.[0]?.name || 'Participant'}, your team ${targetReg.team_name} has been approved by the Zayathon admin team. See you at the event.`,
+              heading: 'Registration Approved',
+              subheading: 'Your team is confirmed',
+              ctaText: 'View Event Site',
+              ctaUrl: window.location.origin,
+            });
+          } catch (emailError: any) {
+            toast({
+              title: 'Approved, but email failed',
+              description: emailError?.message || 'Status was updated, but the approval email could not be sent.',
+              variant: 'destructive',
+            });
+          }
+        }
+
         // Fetch fresh data to ensure consistency
         await fetchRegistrations();
       }
@@ -361,6 +407,7 @@ const Admin = () => {
 
   const handleRejectRegistration = async (id: string) => {
     if (processingIds.has(id)) return;
+    const targetReg = registrations.find((reg) => reg.id === id);
     
     setProcessingIds(prev => new Set(prev).add(id));
     
@@ -401,6 +448,27 @@ const Admin = () => {
       } else {
         console.log('Rejection successful for registration:', id);
         toast({ title: 'Success', description: 'Registration rejected!' });
+
+        if (targetReg?.contact_email) {
+          try {
+            await sendAdminEmail({
+              to: targetReg.contact_email,
+              subject: 'Zayathon Registration Update',
+              message: `Hi ${targetReg.team_members?.[0]?.name || 'Participant'}, your team ${targetReg.team_name} was not approved at this time. You can contact the admin team for details and next steps.`,
+              heading: 'Registration Status Update',
+              subheading: 'Action required from your side',
+              ctaText: 'Contact Admin Team',
+              ctaUrl: 'mailto:zayacodehub@gmail.com',
+            });
+          } catch (emailError: any) {
+            toast({
+              title: 'Rejected, but email failed',
+              description: emailError?.message || 'Status was updated, but the rejection email could not be sent.',
+              variant: 'destructive',
+            });
+          }
+        }
+
         // Fetch fresh data to ensure consistency
         await fetchRegistrations();
       }
@@ -414,6 +482,53 @@ const Admin = () => {
       });
     } finally {
       setProcessingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
+    }
+  };
+
+  const handleDeleteRegistration = async (id: string) => {
+    if (processingIds.has(id)) return;
+
+    const targetReg = registrations.find((reg) => reg.id === id);
+    if (!targetReg) return;
+
+    setProcessingIds((prev) => new Set(prev).add(id));
+
+    try {
+      const { error } = await supabase
+        .from('registrations')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting registration:', error);
+        toast({
+          title: 'Delete Failed',
+          description: error.code === '42501'
+            ? 'Delete blocked by Supabase RLS policy. Apply latest migration and retry.'
+            : (error.message || 'Unable to delete registration from database.'),
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Deleted',
+          description: `${targetReg?.team_name || 'Registration'} removed from database.`,
+        });
+        await fetchRegistrations();
+        setRegistrationToDelete(null);
+      }
+    } catch (error: any) {
+      console.error('Unexpected delete error:', error);
+      toast({
+        title: 'Delete Failed',
+        description: error?.message || 'Unexpected error while deleting registration.',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(id);
         return newSet;
@@ -528,23 +643,50 @@ const Admin = () => {
     }
   };
 
+  const sendAdminEmail = async ({
+    to,
+    subject,
+    message,
+    heading,
+    subheading,
+    ctaText,
+    ctaUrl,
+  }: {
+    to: string;
+    subject: string;
+    message: string;
+    heading?: string;
+    subheading?: string;
+    ctaText?: string;
+    ctaUrl?: string;
+  }) => {
+    const response = await fetch(resolveApiUrl('/api/admin-send-email'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to, subject, message, heading, subheading, ctaText, ctaUrl }),
+    });
+
+    let data: any = null;
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok) {
+      throw new Error(data?.error || 'Failed to send email');
+    }
+  };
+
   const handleSendEmail = async (email: string) => {
     try {
-      const response = await fetch('/api/admin-send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: email,
-          subject: 'Zayathon Admin Update',
-          message: 'This is an update from the Zayathon admin team regarding your registration.',
-        }),
+      await sendAdminEmail({
+        to: email,
+        subject: 'Zayathon Admin Update',
+        message: 'This is an update from the Zayathon admin team regarding your registration.',
+        heading: 'Admin Update',
+        subheading: 'Zayathon 2026 Registration Team',
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data?.error || 'Failed to send email');
-      }
 
       toast({
         title: 'Email Sent',
@@ -946,8 +1088,27 @@ const Admin = () => {
                               variant="outline" 
                               onClick={() => handleSendEmail(reg.contact_email)}
                               className="w-full"
+                              disabled={processingIds.has(reg.id)}
                             >
                               <Mail className="w-4 h-4 mr-1" />Email
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => setRegistrationToDelete(reg)}
+                              className="w-full"
+                              disabled={processingIds.has(reg.id)}
+                            >
+                              {processingIds.has(reg.id) ? (
+                                <>
+                                  <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                                  Deleting...
+                                </>
+                              ) : (
+                                <>
+                                  <Trash2 className="w-4 h-4 mr-1" />Delete
+                                </>
+                              )}
                             </Button>
                           </div>
                         </div>
@@ -1351,6 +1512,39 @@ const Admin = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!registrationToDelete}
+        onOpenChange={(open) => {
+          if (!open && !registrationToDelete) return;
+          if (!open) setRegistrationToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Registration?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {registrationToDelete?.team_name || 'this registration'} from database.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={!!(registrationToDelete && processingIds.has(registrationToDelete.id))}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (registrationToDelete?.id) {
+                  void handleDeleteRegistration(registrationToDelete.id);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={!!(registrationToDelete && processingIds.has(registrationToDelete.id))}
+            >
+              {registrationToDelete && processingIds.has(registrationToDelete.id) ? 'Deleting...' : 'Delete Permanently'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
