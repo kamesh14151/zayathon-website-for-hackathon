@@ -22,16 +22,15 @@ export default async function handler(req, res) {
     };
 
     const configuredBaseUrl = String(process.env.DODO_PAYMENTS_BASE_URL || '').trim();
+
+    // Dodo test and live API keys both use the primary API domain.
+    // Only use a custom base URL when explicitly provided.
     const endpointCandidates = configuredBaseUrl
-      ? [`${configuredBaseUrl.replace(/\/$/, '')}/payments`]
-      : process.env.DODO_PAYMENTS_ENVIRONMENT === 'live_mode'
-        ? ['https://api.dodopayments.com/payments']
-        : [
-            // Most accounts (including test mode keys) use the main API host.
-            'https://api.dodopayments.com/payments',
-            // Kept as fallback for older setups.
-            'https://test-api.dodopayments.com/payments',
-          ];
+      ? [
+          `${configuredBaseUrl.replace(/\/$/, '')}/payments`,
+          'https://api.dodopayments.com/payments',
+        ]
+      : ['https://api.dodopayments.com/payments'];
 
     let lastError;
 
@@ -62,6 +61,7 @@ export default async function handler(req, res) {
 
         return res.status(200).json(dodoData);
       } catch (error) {
+        console.error(`Checkout request failed for ${endpoint}:`, error);
         lastError = error;
       }
     }
