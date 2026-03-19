@@ -8,11 +8,22 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'DODO_PAYMENTS_API_KEY is not set' });
     }
 
-    const { customer } = req.body;
+    const { customer, billing: billingInput } = req.body || {};
+
+    const parsedZipcode = Number.parseInt(String(billingInput?.zipcode || '636005'), 10);
+
+    const billing = {
+      city: String(billingInput?.city || 'Salem').trim(),
+      country: String(billingInput?.country || 'IN').trim().toUpperCase(),
+      state: String(billingInput?.state || 'Tamil Nadu').trim(),
+      street: String(billingInput?.street || 'Sona College of Technology').trim(),
+      zipcode: Number.isNaN(parsedZipcode) ? 636005 : parsedZipcode,
+    };
     
     // Instead of using lookupKey, we directly set to ₹200 team fee logic here
     // Create the payment checkout logic pointing to Dodo's REST API or similar SDK endpoint
     const dodoPayload = {
+      billing,
       product_cart: [{ 
         product_id: process.env.DODO_PRODUCT_ID_BASIC || 'zayathon_team_fee', 
         quantity: 1 
