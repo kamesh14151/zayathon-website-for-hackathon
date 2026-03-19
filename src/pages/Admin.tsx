@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select';
 import {
   Users, Download, RefreshCw, Search, LogOut, Check, X,
-  Trophy, Mail, BarChart3, Plus, Edit, Trash2, Send, Image, CalendarDays
+  Trophy, Mail, BarChart3, Plus, Edit, Trash2, Send, Image, CalendarDays, SlidersHorizontal
 } from 'lucide-react';
 import { ADMIN_EMAIL, ADMIN_SESSION_KEY } from '@/lib/adminAuth';
 import {
@@ -714,33 +714,63 @@ const Admin = () => {
               </CardHeader>
               <CardContent>
                 <div className="mb-6">
-                  <div className="grid gap-3 md:grid-cols-3">
-                    <div className="relative md:col-span-2">
-                      <Label htmlFor="search" className="sr-only">Search</Label>
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="search"
-                        placeholder="Search by team ID, team name, email, college..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
+                  <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_260px_auto] md:items-end">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="search" className="text-xs text-muted-foreground">Search</Label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="search"
+                          placeholder="Search by team ID, team name, email, college..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="h-11 pl-10 pr-10"
+                        />
+                        {searchTerm ? (
+                          <button
+                            type="button"
+                            aria-label="Clear search"
+                            onClick={() => setSearchTerm('')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Payment Status</Label>
-                      <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Payment States" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Payment States</SelectItem>
-                          <SelectItem value="checkout_initialized">Checkout Initialized</SelectItem>
-                          <SelectItem value="payment_pending">Payment Pending</SelectItem>
-                          <SelectItem value="payment_success">Payment Success</SelectItem>
-                          <SelectItem value="payment_failed">Payment Failed</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <SlidersHorizontal className="w-3.5 h-3.5" />
+                        Payment Status
+                      </Label>
+                      <div className="relative">
+                        <SlidersHorizontal className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                        <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
+                          <SelectTrigger className="h-11 pl-10">
+                            <SelectValue placeholder="All Payment States" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Payment States</SelectItem>
+                            <SelectItem value="checkout_initialized">Checkout Initialized</SelectItem>
+                            <SelectItem value="payment_pending">Payment Pending</SelectItem>
+                            <SelectItem value="payment_success">Payment Success</SelectItem>
+                            <SelectItem value="payment_failed">Payment Failed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-11"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setPaymentStatusFilter('all');
+                      }}
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Clear
+                    </Button>
                   </div>
                 </div>
 
