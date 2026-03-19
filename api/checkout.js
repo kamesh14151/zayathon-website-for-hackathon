@@ -79,7 +79,32 @@ export default async function handler(req, res) {
             .json({ error: dodoData.message || dodoData.error || 'Failed to create checkout' });
         }
 
-        return res.status(200).json(dodoData);
+        const checkoutUrl =
+          dodoData.checkout_url ||
+          dodoData.checkoutUrl ||
+          dodoData.url ||
+          dodoData.payment_link ||
+          dodoData.payment_url ||
+          dodoData.hosted_url ||
+          dodoData?.data?.checkout_url ||
+          dodoData?.data?.checkoutUrl ||
+          dodoData?.data?.url ||
+          dodoData?.data?.payment_link ||
+          dodoData?.data?.payment_url ||
+          dodoData?.data?.hosted_url;
+
+        if (!checkoutUrl || typeof checkoutUrl !== 'string') {
+          console.error('Dodo response did not include a usable checkout URL:', dodoData);
+          return res.status(502).json({
+            error: 'Dodo response missing checkout URL',
+            details: {
+              topLevelKeys: Object.keys(dodoData || {}),
+              dataKeys: dodoData?.data && typeof dodoData.data === 'object' ? Object.keys(dodoData.data) : [],
+            },
+          });
+        }
+
+        return res.status(200).json({ ...dodoData, checkout_url: checkoutUrl });
       } catch (error) {
         console.error(`Checkout request failed for ${endpoint}:`, error);
         lastError = error;
