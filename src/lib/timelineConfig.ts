@@ -12,8 +12,8 @@ export interface EditableTimelineEvent {
   color: string;
 }
 
-export const TIMELINE_STORAGE_KEY = "zayathon-timeline-events";
 export const DEFAULT_COUNTDOWN_TARGET = "2026-02-15T09:00:00";
+export const COUNTDOWN_STOP_VALUE = "__ZERO__";
 
 export const DEFAULT_TIMELINE_EVENTS: EditableTimelineEvent[] = [
   {
@@ -113,23 +113,6 @@ const mapEventToRow = (event: EditableTimelineEvent, index: number): TimelineEve
   color: event.color,
 });
 
-const getTimelineEventsFromLocal = (): EditableTimelineEvent[] => {
-  if (typeof window === "undefined") return DEFAULT_TIMELINE_EVENTS;
-
-  const raw = localStorage.getItem(TIMELINE_STORAGE_KEY);
-  if (!raw) return DEFAULT_TIMELINE_EVENTS;
-
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return DEFAULT_TIMELINE_EVENTS;
-
-    const valid = parsed.filter(isValidTimelineEvent);
-    return valid.length > 0 ? valid : DEFAULT_TIMELINE_EVENTS;
-  } catch {
-    return DEFAULT_TIMELINE_EVENTS;
-  }
-};
-
 export const getTimelineEvents = async (): Promise<EditableTimelineEvent[]> => {
   try {
     const { data, error } = await supabase
@@ -137,31 +120,28 @@ export const getTimelineEvents = async (): Promise<EditableTimelineEvent[]> => {
       .select("id, order_index, date_text, time_text, title, description, status, color")
       .order("order_index", { ascending: true });
 
-    if (error || !data || data.length === 0) {
-      const localEvents = getTimelineEventsFromLocal();
-      return localEvents;
+    if (error) {
+      return DEFAULT_TIMELINE_EVENTS;
+    }
+
+    if (!data || data.length === 0) {
+      // Bootstrap defaults in Supabase so countdown/timeline stay shared across devices.
+      await saveTimelineEvents(DEFAULT_TIMELINE_EVENTS);
+      return DEFAULT_TIMELINE_EVENTS;
     }
 
     const events = (data as TimelineEventRow[])
       .map(mapRowToEvent)
       .filter(isValidTimelineEvent);
 
-    if (typeof window !== "undefined") {
-      localStorage.setItem(TIMELINE_STORAGE_KEY, JSON.stringify(events));
-    }
-
     return events.length > 0 ? events : DEFAULT_TIMELINE_EVENTS;
   } catch {
-    return getTimelineEventsFromLocal();
+    return DEFAULT_TIMELINE_EVENTS;
   }
 };
 
 export const saveTimelineEvents = async (events: EditableTimelineEvent[]) => {
   const sanitizedEvents = events.filter(isValidTimelineEvent);
-
-  if (typeof window !== "undefined") {
-    localStorage.setItem(TIMELINE_STORAGE_KEY, JSON.stringify(sanitizedEvents));
-  }
 
   try {
     const rows = sanitizedEvents.map((event, index) => mapEventToRow(event, index + 1));
@@ -178,6 +158,7 @@ export const saveTimelineEvents = async (events: EditableTimelineEvent[]) => {
 };
 
 const extractStartTime = (timeText: string) => {
+  if (timeText === COUNTDOWN_STOP_VALUE) return COUNTDOWN_STOP_VALUE;
   if (!timeText) return "09:00 AM";
   const rangeSplit = timeText.split("-")[0]?.trim();
   const match = rangeSplit.match(/\d{1,2}:\d{2}\s?(AM|PM)/i);
@@ -190,6 +171,10 @@ export const getCountdownTargetDate = async (): Promise<string> => {
     const events = await getTimelineEvents();
     const hackathonEvent = events.find((event) => event.id === "hackathon-days");
     if (!hackathonEvent) return DEFAULT_COUNTDOWN_TARGET;
+
+    if (hackathonEvent.time === COUNTDOWN_STOP_VALUE) {
+      return new Date(0).toISOString();
+    }
 
     const parsedDate = new Date(`${hackathonEvent.date} ${extractStartTime(hackathonEvent.time)}`);
     if (Number.isNaN(parsedDate.getTime())) return DEFAULT_COUNTDOWN_TARGET;

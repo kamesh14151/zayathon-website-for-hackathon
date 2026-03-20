@@ -96,8 +96,12 @@ const TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
   const minute = index % 2 === 0 ? '00' : '30';
   const period = hour24 >= 12 ? 'PM' : 'AM';
   const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
-  return `${hour12}:${minute} ${period}`;
+  const value = `${hour12}:${minute} ${period}`;
+  const label = value;
+  return { value, label };
 });
+
+const COUNTDOWN_STOP_VALUE = '__ZERO__';
 
 const toCountdownDateText = (date: Date) =>
   date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -108,6 +112,7 @@ const parseCountdownDateText = (dateText: string): Date | undefined => {
 };
 
 const extractCountdownStartTime = (timeText: string) => {
+  if (timeText === COUNTDOWN_STOP_VALUE) return COUNTDOWN_STOP_VALUE;
   if (!timeText) return '';
   const firstPart = timeText.split('-')[0]?.trim();
   const matched = firstPart.match(/^\d{1,2}:\d{2}\s?(AM|PM)$/i);
@@ -115,6 +120,7 @@ const extractCountdownStartTime = (timeText: string) => {
 };
 
 const getCountdownPreviewTarget = (dateText: string, timeText: string) => {
+  if (timeText === COUNTDOWN_STOP_VALUE) return new Date(0).toISOString();
   if (!dateText || !timeText) return null;
   const parsed = new Date(`${dateText} ${timeText}`);
   if (Number.isNaN(parsed.getTime())) return null;
@@ -388,10 +394,19 @@ const Admin = () => {
     const nextDate = countdownDate.trim();
     const nextTime = countdownTime.trim();
 
-    if (!nextDate || !nextTime) {
+    if (!nextTime) {
       toast({
         title: 'Missing countdown values',
-        description: 'Please provide both date and time for the countdown target.',
+        description: 'Please provide countdown time mode.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (nextTime !== COUNTDOWN_STOP_VALUE && !nextDate) {
+      toast({
+        title: 'Missing countdown date',
+        description: 'Please provide date for countdown target.',
         variant: 'destructive',
       });
       return;
@@ -411,7 +426,7 @@ const Admin = () => {
       event.id === 'hackathon-days'
         ? {
             ...event,
-            date: nextDate,
+            date: nextDate || event.date,
             time: nextTime,
           }
         : event
@@ -1626,8 +1641,9 @@ const Admin = () => {
                           <SelectValue placeholder="Select time" />
                         </SelectTrigger>
                         <SelectContent className="max-h-72">
+                          <SelectItem value={COUNTDOWN_STOP_VALUE}>0 (Stop countdown - all values 00)</SelectItem>
                           {TIME_OPTIONS.map((timeOption) => (
-                            <SelectItem key={timeOption} value={timeOption}>{timeOption}</SelectItem>
+                            <SelectItem key={timeOption.value} value={timeOption.value}>{timeOption.label}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
