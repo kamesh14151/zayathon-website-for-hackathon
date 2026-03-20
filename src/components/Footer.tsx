@@ -132,8 +132,8 @@ const Footer = () => {
                   : "opacity-0 scale-95 pointer-events-none"
               }`}
             >
-              <div className="rounded-2xl border border-[#ff8a3d]/35 bg-gradient-to-b from-white to-[#fff3ea] p-2.5 shadow-[0_18px_45px_rgba(0,0,0,0.35)]">
-                <StyledAjQr size={104} className="h-[104px] w-[104px] overflow-hidden rounded-lg" />
+              <div className="rounded-2xl border border-[#ff8a3d]/35 bg-gradient-to-b from-white to-[#fff3ea] p-2.5 md:p-3 shadow-[0_18px_45px_rgba(0,0,0,0.35)]">
+                <StyledAjQr size={128} className="h-[120px] w-[120px] md:h-[128px] md:w-[128px]" />
                 <p className="mt-1.5 text-center text-[10px] font-semibold tracking-wide text-[#9a4b17]">SCAN TO VISIT</p>
               </div>
             </div>
