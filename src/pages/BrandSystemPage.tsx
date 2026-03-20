@@ -4,6 +4,7 @@ import { Check, Copy } from "lucide-react";
 import BrandWordmark from "@/components/BrandWordmark";
 import SectionPageLayout from "@/components/SectionPageLayout";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 const colorTokens = [
   { name: "Background", varName: "--background", sample: "hsl(var(--background))" },
@@ -47,14 +48,43 @@ surface-card: rounded-[2rem] border bg-card text-card-foreground;`;
 
 const BrandSystemPage = () => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const writeToClipboard = async (value: string) => {
+    if (typeof window === "undefined") return false;
+
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(value);
+      return true;
+    }
+
+    const textArea = document.createElement("textarea");
+    textArea.value = value;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    textArea.style.top = "-9999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    const copied = document.execCommand("copy");
+    document.body.removeChild(textArea);
+    return copied;
+  };
 
   const copyToken = async (key: string, value: string) => {
     try {
-      await navigator.clipboard.writeText(value);
+      const copied = await writeToClipboard(value);
+      if (!copied) throw new Error("Copy failed");
       setCopiedKey(key);
       setTimeout(() => setCopiedKey((prev) => (prev === key ? null : prev)), 1200);
     } catch {
       setCopiedKey(null);
+      toast({
+        title: "Copy failed",
+        description: "Unable to access clipboard in this browser context.",
+        variant: "destructive",
+      });
     }
   };
 
