@@ -18,6 +18,7 @@ import CommunityPage from "./pages/CommunityPage";
 import EventsPage from "./pages/EventsPage";
 import FaqPage from "./pages/FaqPage";
 import GuidelinesPage from "./pages/GuidelinesPage";
+import BrandSystemPage from "./pages/BrandSystemPage";
 import ConsentRuntime from "@/components/ConsentRuntime";
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
         <Route path="/events" element={<EventsPage />} />
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/guidelines" element={<GuidelinesPage />} />
+        <Route path="/brand-system" element={<BrandSystemPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <CookieConsent />

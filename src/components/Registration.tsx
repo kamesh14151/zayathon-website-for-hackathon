@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,100 @@ import { CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { addRegistration } from "../integrations/supabase/client";
 import BrandWordmark from "@/components/BrandWordmark";
+
+const salemEngineeringColleges = [
+  { id: 1, name: "Government College of Engineering", city: "Salem", type: "Government", affiliation: "Anna University" },
+  { id: 2, name: "Sona College of Technology", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 3, name: "AVS Engineering College", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 4, name: "Dhirajlal Gandhi College of Technology", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 5, name: "Knowledge Institute of Technology", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 6, name: "Mahendra Engineering College", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 7, name: "Mahendra Institute of Technology", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 8, name: "KSR College of Engineering", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 9, name: "KSR Institute for Engineering and Technology", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 10, name: "Paavai Engineering College", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 11, name: "Paavai College of Engineering", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 12, name: "Tagore Institute of Engineering and Technology", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 13, name: "AVS Technical Campus", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 14, name: "Ganesh College of Engineering", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 15, name: "The Kavery Engineering College", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 16, name: "Sri Shanmugha College of Engineering and Technology", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 17, name: "Salem College of Engineering and Technology", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 18, name: "Global Institute of Engineering and Technology", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 19, name: "Sengunthar Engineering College", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 20, name: "Vivekanandha Institute of Engineering and Technology for Women", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 21, name: "Excel Engineering College", city: "Salem", type: "Private", affiliation: "Anna University" },
+  { id: 22, name: "Jairam Engineering College", city: "Salem", type: "Private", affiliation: "Anna University" },
+];
+
+type CollegeAutocompleteProps = {
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+};
+
+const CollegeAutocomplete = ({ id, value, onChange, placeholder }: CollegeAutocompleteProps) => {
+  const [open, setOpen] = useState(false);
+
+  const filteredColleges = useMemo(() => {
+    const query = value.trim().toLowerCase();
+    if (!query) return salemEngineeringColleges.slice(0, 8);
+
+    return salemEngineeringColleges
+      .filter((college) => {
+        const haystack = `${college.name} ${college.city} ${college.type} ${college.affiliation}`.toLowerCase();
+        return haystack.includes(query);
+      })
+      .slice(0, 8);
+  }, [value]);
+
+  return (
+    <div className="relative">
+      <Input
+        id={id}
+        placeholder={placeholder}
+        required
+        value={value}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 120)}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setOpen(true);
+        }}
+        className="bg-input border-border focus:border-ring"
+      />
+
+      {open && (
+        <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-lg">
+          <div className="max-h-56 overflow-auto p-1">
+            {filteredColleges.length > 0 ? (
+              filteredColleges.map((college) => (
+                <button
+                  key={college.id}
+                  type="button"
+                  className="w-full rounded-md px-3 py-2 text-left transition-colors hover:bg-accent"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    onChange(college.name);
+                    setOpen(false);
+                  }}
+                >
+                  <p className="text-sm font-medium text-foreground">{college.name}</p>
+                  <p className="text-xs text-muted-foreground">{college.city} • {college.type} • {college.affiliation}</p>
+                </button>
+              ))
+            ) : (
+              <div className="px-3 py-2 text-xs text-muted-foreground">
+                No matching colleges found. You can continue typing a custom college name.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Registration = () => {
   const { toast } = useToast();
@@ -314,13 +408,11 @@ const Registration = () => {
                     <Label htmlFor="college" className="text-foreground">
                       College/University *
                     </Label>
-                    <Input
+                    <CollegeAutocomplete
                       id="college"
-                      placeholder="Enter your college name"
-                      required
+                      placeholder="Type your college name"
                       value={formData.college}
-                      onChange={(e) => handleChange("college", sanitizeName(e.target.value))}
-                      className="bg-input border-border focus:border-ring"
+                      onChange={(next) => handleChange("college", next)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -404,11 +496,11 @@ const Registration = () => {
                         </div>
                         <div className="space-y-1">
                           <Label className="text-foreground">College</Label>
-                          <Input
-                            placeholder="College/University"
+                          <CollegeAutocomplete
+                            id="member-college"
+                            placeholder="Type member college"
                             value={newMember.college}
-                            onChange={(e) => setNewMember((prev) => ({ ...prev, college: sanitizeName(e.target.value) }))}
-                            className="bg-input border-border focus:border-primary"
+                            onChange={(next) => setNewMember((prev) => ({ ...prev, college: next }))}
                           />
                         </div>
                         <div className="space-y-1">
