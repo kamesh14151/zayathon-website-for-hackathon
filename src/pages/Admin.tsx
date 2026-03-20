@@ -834,14 +834,14 @@ const Admin = () => {
     : (currentMonthRevenue > 0 ? 100 : 0);
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background px-3 py-4 sm:px-4 sm:py-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-6 flex flex-col gap-4 lg:mb-8 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+            <h1 className="mb-1 text-2xl font-bold sm:text-3xl">Admin Dashboard</h1>
             <p className="text-muted-foreground">Manage your hackathon</p>
           </div>
-          <div className="flex gap-4 items-center">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-4">
             <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isRefreshing}>
               <motion.span
                 className="inline-flex mr-2"
@@ -859,7 +859,7 @@ const Admin = () => {
               {isRefreshing ? 'Refreshing...' : 'Refresh'}
             </Button>
             <span className="text-sm text-muted-foreground hidden md:inline">{user?.email}</span>
-            <Button onClick={handleLogout} variant="outline">
+            <Button onClick={handleLogout} variant="outline" size="sm">
               <LogOut className="w-4 h-4 mr-2" />
               Logout
             </Button>
@@ -867,7 +867,7 @@ const Admin = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:mb-8 lg:grid-cols-5 lg:gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
@@ -911,25 +911,27 @@ const Admin = () => {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-6 w-full max-w-5xl">
-            <TabsTrigger value="registrations"><Users className="w-4 h-4 mr-2" />Registrations</TabsTrigger>
-            <TabsTrigger value="problems"><Edit className="w-4 h-4 mr-2" />Problems</TabsTrigger>
-            <TabsTrigger value="winners"><Trophy className="w-4 h-4 mr-2" />Winners</TabsTrigger>
-            <TabsTrigger value="timeline"><CalendarDays className="w-4 h-4 mr-2" />Timeline</TabsTrigger>
-            <TabsTrigger value="analytics"><BarChart3 className="w-4 h-4 mr-2" />Analytics</TabsTrigger>
-            <TabsTrigger value="payments"><CreditCard className="w-4 h-4 mr-2" />Payments</TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+          <div className="overflow-x-auto pb-1">
+            <TabsList className="inline-flex h-auto min-w-max gap-1 p-1">
+              <TabsTrigger className="shrink-0" value="registrations"><Users className="w-4 h-4 mr-2" />Registrations</TabsTrigger>
+              <TabsTrigger className="shrink-0" value="problems"><Edit className="w-4 h-4 mr-2" />Problems</TabsTrigger>
+              <TabsTrigger className="shrink-0" value="winners"><Trophy className="w-4 h-4 mr-2" />Winners</TabsTrigger>
+              <TabsTrigger className="shrink-0" value="timeline"><CalendarDays className="w-4 h-4 mr-2" />Timeline</TabsTrigger>
+              <TabsTrigger className="shrink-0" value="analytics"><BarChart3 className="w-4 h-4 mr-2" />Analytics</TabsTrigger>
+              <TabsTrigger className="shrink-0" value="payments"><CreditCard className="w-4 h-4 mr-2" />Payments</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Registrations Tab */}
           <TabsContent value="registrations">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <CardTitle>Registrations</CardTitle>
                   <CardDescription>Manage team registrations. Email button sends a manual update email to that team contact.</CardDescription>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                   <Button onClick={handleBroadcastEmail} variant="outline">
                     <Mail className="w-4 h-4 mr-2" />Broadcast
                   </Button>
@@ -940,7 +942,7 @@ const Admin = () => {
               </CardHeader>
               <CardContent>
                 <div className="mb-6">
-                  <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_260px_auto] md:items-end">
+                  <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_260px_auto] lg:items-end">
                     <div className="space-y-1.5">
                       <Label htmlFor="search" className="text-xs text-muted-foreground">Search</Label>
                       <div className="relative">
@@ -998,7 +1000,7 @@ const Admin = () => {
                       Clear
                     </Button>
                   </div>
-                  <div className="mt-3 flex items-center justify-between gap-3">
+                  <div className="mt-3 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
                     <p className="text-xs text-muted-foreground">
                       {filteredRegistrations.length} registration{filteredRegistrations.length === 1 ? '' : 's'}
                     </p>
@@ -1036,9 +1038,9 @@ const Admin = () => {
                     <p className="text-muted-foreground">No registrations found</p>
                   </div>
                 ) : (
-                  <div className={registrationView === 'cards' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-2" : "space-y-4"}>
+                  <div className={registrationView === 'cards' ? "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-6 p-1 sm:p-2" : "space-y-4"}>
                     {filteredRegistrations.map((reg) => registrationView === 'cards' ? (
-                      <div key={reg.id} className="h-[300px] w-full">
+                      <div key={reg.id} className="h-[320px] sm:h-[300px] w-full">
                         <RegistrationFlipCard
                           registration={reg}
                           onApprove={() => handleApproveRegistration(reg.id)}
@@ -1288,7 +1290,7 @@ const Admin = () => {
           {/* Problem Statements Tab */}
           <TabsContent value="problems">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <CardTitle>Problem Statements</CardTitle>
                   <CardDescription>Manage hackathon challenges</CardDescription>
@@ -1337,7 +1339,7 @@ const Admin = () => {
           {/* Winners Tab */}
           <TabsContent value="winners">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <CardTitle>Winners</CardTitle>
                   <CardDescription>Manage hackathon results</CardDescription>
@@ -1386,12 +1388,12 @@ const Admin = () => {
           {/* Timeline Tab */}
           <TabsContent value="timeline">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <CardTitle>Timeline Controls</CardTitle>
                   <CardDescription>Edit date, time, and status for events shown on the public timeline page.</CardDescription>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
                   <Button variant="outline" onClick={fetchTimelineEvents} disabled={timelineLoading || timelineSaving}>Reload</Button>
                   <Button variant="outline" onClick={handleResetTimeline} disabled={timelineLoading || timelineSaving}>Reset Default</Button>
                   <Button onClick={handleSaveTimeline} disabled={timelineLoading || timelineSaving}>
@@ -1525,7 +1527,7 @@ const Admin = () => {
           {/* Payments Tab */}
           <TabsContent value="payments">
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
@@ -1534,7 +1536,7 @@ const Admin = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">Rs {totalRevenueInr.toLocaleString('en-IN')}</div>
+                    <div className="text-2xl sm:text-3xl font-bold">Rs {totalRevenueInr.toLocaleString('en-IN')}</div>
                   </CardContent>
                 </Card>
 
@@ -1546,7 +1548,7 @@ const Admin = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{paymentSuccessRegistrations.length}</div>
+                    <div className="text-2xl sm:text-3xl font-bold">{paymentSuccessRegistrations.length}</div>
                   </CardContent>
                 </Card>
 
@@ -1558,7 +1560,7 @@ const Admin = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">Rs {totalRefundsInr.toLocaleString('en-IN')}</div>
+                    <div className="text-2xl sm:text-3xl font-bold">Rs {totalRefundsInr.toLocaleString('en-IN')}</div>
                   </CardContent>
                 </Card>
 
@@ -1570,7 +1572,7 @@ const Admin = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">Rs {payoutsReceivedInr.toLocaleString('en-IN')}</div>
+                    <div className="text-2xl sm:text-3xl font-bold">Rs {payoutsReceivedInr.toLocaleString('en-IN')}</div>
                   </CardContent>
                 </Card>
               </div>
