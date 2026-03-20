@@ -13,6 +13,7 @@ export interface EditableTimelineEvent {
 }
 
 export const TIMELINE_STORAGE_KEY = "zayathon-timeline-events";
+export const DEFAULT_COUNTDOWN_TARGET = "2026-02-15T09:00:00";
 
 export const DEFAULT_TIMELINE_EVENTS: EditableTimelineEvent[] = [
   {
@@ -173,5 +174,28 @@ export const saveTimelineEvents = async (events: EditableTimelineEvent[]) => {
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error?.message || "Failed to save timeline" };
+  }
+};
+
+const extractStartTime = (timeText: string) => {
+  if (!timeText) return "09:00 AM";
+  const rangeSplit = timeText.split("-")[0]?.trim();
+  const match = rangeSplit.match(/\d{1,2}:\d{2}\s?(AM|PM)/i);
+  if (match) return match[0].toUpperCase();
+  return "09:00 AM";
+};
+
+export const getCountdownTargetDate = async (): Promise<string> => {
+  try {
+    const events = await getTimelineEvents();
+    const hackathonEvent = events.find((event) => event.id === "hackathon-days");
+    if (!hackathonEvent) return DEFAULT_COUNTDOWN_TARGET;
+
+    const parsedDate = new Date(`${hackathonEvent.date} ${extractStartTime(hackathonEvent.time)}`);
+    if (Number.isNaN(parsedDate.getTime())) return DEFAULT_COUNTDOWN_TARGET;
+
+    return parsedDate.toISOString();
+  } catch {
+    return DEFAULT_COUNTDOWN_TARGET;
   }
 };

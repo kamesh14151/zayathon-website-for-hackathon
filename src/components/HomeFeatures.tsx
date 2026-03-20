@@ -28,7 +28,7 @@ const features = [
 
 const HomeFeatures = () => {
   return (
-    <section className="py-24 bg-background relative border-t border-border/40">
+    <section className="py-24 bg-background relative">
       <div className="container mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
           {features.map((feature, index) => (

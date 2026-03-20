@@ -1391,7 +1391,7 @@ const Admin = () => {
               <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <CardTitle>Timeline Controls</CardTitle>
-                  <CardDescription>Edit date, time, and status for events shown on the public timeline page.</CardDescription>
+                  <CardDescription>Edit date, time, and status for events shown on the public timeline page. Updating Hackathon Days also updates the homepage Event starts in countdown.</CardDescription>
                 </div>
                 <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
                   <Button variant="outline" onClick={fetchTimelineEvents} disabled={timelineLoading || timelineSaving}>Reload</Button>

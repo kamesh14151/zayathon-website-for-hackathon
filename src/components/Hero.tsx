@@ -1,9 +1,24 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import CountdownTimer from "./CountdownTimer";
 import BrandWordmark from "@/components/BrandWordmark";
+import { DEFAULT_COUNTDOWN_TARGET, getCountdownTargetDate } from "@/lib/timelineConfig";
 
 const Hero = () => {
+  const [targetDate, setTargetDate] = useState(DEFAULT_COUNTDOWN_TARGET);
+
+  useEffect(() => {
+    let mounted = true;
+    getCountdownTargetDate().then((resolvedDate) => {
+      if (mounted) setTargetDate(resolvedDate);
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <section
       id="home"
@@ -88,7 +103,7 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.6 }}
-            className="pt-10 flex flex-wrap justify-center gap-12 md:gap-24"
+            className="pt-10 max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-8"
           >
             {[
               { label: "Teams", value: "200+" },
@@ -104,7 +119,7 @@ const Hero = () => {
                 <div className="font-display text-4xl md:text-5xl font-medium text-foreground tracking-tighter mb-2 group-hover:scale-105 transition-transform">
                   {stat.value}
                 </div>
-                <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold">{stat.label}</div>
+                <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground font-semibold leading-none">{stat.label}</div>
               </motion.div>
             ))}
           </motion.div>
@@ -114,11 +129,16 @@ const Hero = () => {
             initial={{ y: 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.85, duration: 0.8 }}
+            className="mt-10"
           >
-            <p className="mb-5 text-xs tracking-[0.18em] uppercase text-muted-foreground font-medium">
+            <Link
+              to="/admin"
+              className="inline-block mb-5 text-xs tracking-[0.18em] uppercase text-muted-foreground font-medium hover:text-foreground transition-colors"
+              title="Customize countdown date and time in Admin Timeline"
+            >
               Event starts in
-            </p>
-            <CountdownTimer targetDate="2026-02-15T09:00:00" />
+            </Link>
+            <CountdownTimer targetDate={targetDate} />
           </motion.div>
         </motion.div>
       </div>
