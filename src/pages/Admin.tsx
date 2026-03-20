@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getRegistrations, getRegistrationCount, supabase } from '../integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { RegistrationFlipCard } from '@/components/RegistrationFlipCard';
+import CountdownTimer from '@/components/CountdownTimer';
 import {
   Card, CardContent, CardHeader, CardTitle, CardDescription
 } from '@/components/ui/card';
@@ -28,10 +29,12 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Users, Download, RefreshCw, Search, LogOut, Check, X,
   Trophy, Mail, BarChart3, Plus, Edit, Trash2, Send, Image, CalendarDays, SlidersHorizontal,
-  CreditCard, Wallet, TrendingUp, Globe2, LayoutGrid, Rows3
+  CreditCard, Wallet, TrendingUp, Globe2, LayoutGrid, Rows3, Timer, Clock3, ChevronDown
 } from 'lucide-react';
 import { ADMIN_EMAIL, ADMIN_SESSION_KEY } from '@/lib/adminAuth';
 import {
@@ -88,6 +91,36 @@ const COUNTRY_META: Record<string, { x: number; y: number; flag: string }> = {
   Other: { x: 58, y: 50, flag: '🌐' },
 };
 
+const TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
+  const hour24 = Math.floor(index / 2);
+  const minute = index % 2 === 0 ? '00' : '30';
+  const period = hour24 >= 12 ? 'PM' : 'AM';
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  return `${hour12}:${minute} ${period}`;
+});
+
+const toCountdownDateText = (date: Date) =>
+  date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+const parseCountdownDateText = (dateText: string): Date | undefined => {
+  const parsed = new Date(dateText);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+};
+
+const extractCountdownStartTime = (timeText: string) => {
+  if (!timeText) return '';
+  const firstPart = timeText.split('-')[0]?.trim();
+  const matched = firstPart.match(/^\d{1,2}:\d{2}\s?(AM|PM)$/i);
+  return matched ? `${matched[0].replace(/\s+/g, ' ').toUpperCase()}` : firstPart;
+};
+
+const getCountdownPreviewTarget = (dateText: string, timeText: string) => {
+  if (!dateText || !timeText) return null;
+  const parsed = new Date(`${dateText} ${timeText}`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString();
+};
+
 const resolveApiUrl = (path: string) => {
   const configuredBase = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/$/, '');
   if (configuredBase) return `${configuredBase}${path}`;
@@ -101,6 +134,7 @@ const resolveApiUrl = (path: string) => {
 
 const Admin = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,6 +150,8 @@ const Admin = () => {
   const [timelineEvents, setTimelineEvents] = useState<EditableTimelineEvent[]>([]);
   const [timelineLoading, setTimelineLoading] = useState(true);
   const [timelineSaving, setTimelineSaving] = useState(false);
+  const [countdownDate, setCountdownDate] = useState('');
+  const [countdownTime, setCountdownTime] = useState('');
 
   // Problem Statements State
   const [problemStatements, setProblemStatements] = useState<ProblemStatement[]>([]);
@@ -147,6 +183,14 @@ const Admin = () => {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    const tab = new URLSearchParams(location.search).get('tab');
+    const allowedTabs = ['registrations', 'problems', 'winners', 'timeline', 'countdown', 'analytics', 'payments'];
+    if (tab && allowedTabs.includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     // Set up real-time subscription for registrations
@@ -214,6 +258,9 @@ const Admin = () => {
     try {
       const events = await getTimelineEvents();
       setTimelineEvents(events);
+      const countdownEvent = events.find((event) => event.id === 'hackathon-days');
+      setCountdownDate(countdownEvent?.date || '');
+      setCountdownTime(extractCountdownStartTime(countdownEvent?.time || ''));
     } finally {
       setTimelineLoading(false);
     }
@@ -316,6 +363,9 @@ const Admin = () => {
   const handleResetTimeline = async () => {
     const resetEvents = DEFAULT_TIMELINE_EVENTS.map((event) => ({ ...event }));
     setTimelineEvents(resetEvents);
+    const countdownEvent = resetEvents.find((event) => event.id === 'hackathon-days');
+    setCountdownDate(countdownEvent?.date || '');
+    setCountdownTime(extractCountdownStartTime(countdownEvent?.time || ''));
     setTimelineSaving(true);
     try {
       const result = await saveTimelineEvents(resetEvents);
@@ -329,6 +379,61 @@ const Admin = () => {
       }
 
       toast({ title: 'Timeline Reset', description: 'Timeline restored to default event values.' });
+    } finally {
+      setTimelineSaving(false);
+    }
+  };
+
+  const handleSaveCountdown = async () => {
+    const nextDate = countdownDate.trim();
+    const nextTime = countdownTime.trim();
+
+    if (!nextDate || !nextTime) {
+      toast({
+        title: 'Missing countdown values',
+        description: 'Please provide both date and time for the countdown target.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const hasCountdownEvent = timelineEvents.some((event) => event.id === 'hackathon-days');
+    if (!hasCountdownEvent) {
+      toast({
+        title: 'Countdown source missing',
+        description: 'Hackathon Days event was not found in timeline events.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const updatedEvents = timelineEvents.map((event) =>
+      event.id === 'hackathon-days'
+        ? {
+            ...event,
+            date: nextDate,
+            time: nextTime,
+          }
+        : event
+    );
+
+    setTimelineSaving(true);
+    try {
+      const result = await saveTimelineEvents(updatedEvents);
+      if (!result.success) {
+        toast({
+          title: 'Save Failed',
+          description: result.error || 'Failed to save countdown settings.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setTimelineEvents(updatedEvents);
+      toast({
+        title: 'Countdown Updated',
+        description: 'Homepage Event starts in countdown has been updated.',
+      });
     } finally {
       setTimelineSaving(false);
     }
@@ -832,9 +937,10 @@ const Admin = () => {
   const growthRate = previousMonthRevenue > 0
     ? ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100
     : (currentMonthRevenue > 0 ? 100 : 0);
+  const countdownPreviewTarget = getCountdownPreviewTarget(countdownDate, countdownTime);
 
   return (
-    <div className="min-h-screen bg-background px-3 py-4 sm:px-4 sm:py-6 lg:p-8">
+    <div className="min-h-screen bg-background px-3 py-4 sm:px-4 sm:py-6 lg:p-8 overflow-x-hidden">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex flex-col gap-4 lg:mb-8 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -918,6 +1024,7 @@ const Admin = () => {
               <TabsTrigger className="shrink-0" value="problems"><Edit className="w-4 h-4 mr-2" />Problems</TabsTrigger>
               <TabsTrigger className="shrink-0" value="winners"><Trophy className="w-4 h-4 mr-2" />Winners</TabsTrigger>
               <TabsTrigger className="shrink-0" value="timeline"><CalendarDays className="w-4 h-4 mr-2" />Timeline</TabsTrigger>
+              <TabsTrigger className="shrink-0" value="countdown"><Timer className="w-4 h-4 mr-2" />Countdown</TabsTrigger>
               <TabsTrigger className="shrink-0" value="analytics"><BarChart3 className="w-4 h-4 mr-2" />Analytics</TabsTrigger>
               <TabsTrigger className="shrink-0" value="payments"><CreditCard className="w-4 h-4 mr-2" />Payments</TabsTrigger>
             </TabsList>
@@ -1052,7 +1159,7 @@ const Admin = () => {
                         />
                       </div>
                     ) : ( 
-                      <div key={reg.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                      <div key={reg.id} className="border rounded-lg p-3 sm:p-4 hover:bg-muted/50 transition-colors">
                         {(() => {
                           const statusDisplay = reg.status === 'approved'
                             ? {
@@ -1097,10 +1204,10 @@ const Admin = () => {
                               <p>
                                 <span className="font-medium">Leader:</span> {reg.team_members?.[0]?.name || '-'}
                               </p>
-                              <p>
+                              <p className="break-all">
                                 <span className="font-medium">Email:</span> {reg.contact_email}
                               </p>
-                              <p>
+                              <p className="break-words">
                                 <span className="font-medium">College:</span> {reg.institution}
                               </p>
                               <p>
@@ -1120,7 +1227,7 @@ const Admin = () => {
                                 {reg.updated_at ? ` • ${new Date(reg.updated_at).toLocaleString('en-IN')}` : ''}
                               </p>
                             </div>
-                            <p className="text-sm text-muted-foreground mt-2">
+                            <p className="text-sm text-muted-foreground mt-2 break-words">
                               <span className="font-medium">Problem Statement:</span> {reg.problem_statement}
                             </p>
                             {reg.payment_screenshot && (
@@ -1140,7 +1247,7 @@ const Admin = () => {
                               </div>
                             )}
                           </div>
-                          <div className="flex flex-col gap-2 md:min-w-[140px]">
+                          <div className="flex flex-col gap-2 md:min-w-[140px] w-full md:w-auto">
                             {reg.status === 'pending' && (
                               <>
                                 <Button 
@@ -1305,7 +1412,7 @@ const Admin = () => {
                     <div key={problem.id} className="border rounded-lg p-4">
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
                             <h3 className="font-semibold">{problem.title}</h3>
                             <Badge variant={problem.is_active ? 'default' : 'secondary'}>
                               {problem.is_active ? 'Active' : 'Inactive'}
@@ -1317,7 +1424,7 @@ const Admin = () => {
                             <span className="font-medium">Category:</span> {problem.category}
                           </p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap w-full md:w-auto">
                           <Button size="sm" variant="outline" onClick={() => handleToggleProblemStatus(problem.id, problem.is_active)}>
                             {problem.is_active ? 'Deactivate' : 'Activate'}
                           </Button>
@@ -1355,15 +1462,15 @@ const Admin = () => {
                     return (
                       <div key={winner.id} className="border rounded-lg p-4 bg-secondary">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold
                               ${winner.rank === 1 ? 'bg-foreground text-background' :
                                 winner.rank === 2 ? 'bg-muted-foreground text-background' :
                                 'bg-primary text-primary-foreground'}`}>
                               {winner.rank === 1 ? '🥇' : winner.rank === 2 ? '🥈' : '🥉'}
                             </div>
-                            <div>
-                              <h3 className="font-semibold text-lg">{reg?.team_name || 'Unknown Team'}</h3>
+                              <div className="min-w-0">
+                                <h3 className="font-semibold text-lg break-words">{reg?.team_name || 'Unknown Team'}</h3>
                               <p className="text-sm text-muted-foreground">
                                 {winner.rank === 1 ? 'First Place' : winner.rank === 2 ? 'Second Place' : 'Third Place'}
                                 {winner.prize && ` • ${winner.prize}`}
@@ -1457,6 +1564,95 @@ const Admin = () => {
                     </div>
                   ))}
                 </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="countdown">
+            <Card>
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <CardTitle>Countdown Editor</CardTitle>
+                  <CardDescription>Customize the homepage Event starts in countdown target without editing timeline cards manually.</CardDescription>
+                </div>
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+                  <Button variant="outline" onClick={fetchTimelineEvents} disabled={timelineLoading || timelineSaving}>Reload</Button>
+                  <Button onClick={handleSaveCountdown} disabled={timelineLoading || timelineSaving}>
+                    {timelineSaving ? 'Saving...' : 'Save Countdown'}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {timelineLoading ? (
+                  <p className="text-sm text-muted-foreground">Loading countdown settings...</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Countdown Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full justify-between h-11 font-normal"
+                          >
+                            <span className="inline-flex items-center gap-2">
+                              <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                              {countdownDate || 'Select date'}
+                            </span>
+                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={parseCountdownDateText(countdownDate)}
+                            onSelect={(date) => {
+                              if (!date) return;
+                              setCountdownDate(toCountdownDateText(date));
+                            }}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Countdown Time</Label>
+                      <Select value={countdownTime} onValueChange={setCountdownTime}>
+                        <SelectTrigger className="h-11 gap-2">
+                          <Clock3 className="w-4 h-4 text-muted-foreground" />
+                          <SelectValue placeholder="Select time" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-72">
+                          {TIME_OPTIONS.map((timeOption) => (
+                            <SelectItem key={timeOption} value={timeOption}>{timeOption}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <p className="md:col-span-2 text-xs text-muted-foreground">
+                      This editor updates the Hackathon Days timeline event, which powers the homepage countdown timer.
+                    </p>
+
+                    <div className="md:col-span-2 rounded-lg border bg-card p-4 sm:p-5">
+                      <p className="mb-3 text-xs tracking-[0.18em] uppercase text-muted-foreground font-medium">
+                        Home Page Countdown Preview
+                      </p>
+                      {countdownPreviewTarget ? (
+                        <div className="overflow-x-auto">
+                          <div className="min-w-[320px]">
+                            <CountdownTimer targetDate={countdownPreviewTarget} />
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Select a valid date and time to preview the countdown.
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -1714,7 +1910,7 @@ const Admin = () => {
 
       {/* Add Problem Dialog */}
       <Dialog open={showAddProblemDialog} onOpenChange={setShowAddProblemDialog}>
-        <DialogContent>
+        <DialogContent className="w-[calc(100%-1rem)] max-w-lg p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Add Problem Statement</DialogTitle>
           </DialogHeader>
@@ -1753,7 +1949,7 @@ const Admin = () => {
 
       {/* Add Winner Dialog */}
       <Dialog open={showAddWinnerDialog} onOpenChange={setShowAddWinnerDialog}>
-        <DialogContent>
+        <DialogContent className="w-[calc(100%-1rem)] max-w-lg p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Add Winner</DialogTitle>
           </DialogHeader>

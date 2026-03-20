@@ -84,16 +84,16 @@ const AdminLogin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f3f5f8] px-4 py-6 md:px-6 md:py-8">
+    <div className="min-h-screen bg-[#f3f5f8] px-3 py-4 sm:px-4 sm:py-6 md:px-6 md:py-8">
       <div className="mx-auto max-w-[1240px]">
-        <div className="grid min-h-[calc(100vh-4rem)] grid-cols-1 lg:grid-cols-[1fr_1.05fr] gap-7 items-stretch">
-          <section className="rounded-[20px] border border-[#e7eaf0] bg-[#f7f8fb] p-7 md:px-14 md:py-12 flex flex-col justify-center">
-            <div className="mb-11 max-w-[440px] w-full mx-auto lg:mx-0">
+        <div className="grid min-h-[calc(100vh-3rem)] sm:min-h-[calc(100vh-4rem)] grid-cols-1 lg:grid-cols-[1fr_1.05fr] gap-5 sm:gap-7 items-stretch">
+          <section className="rounded-[20px] border border-[#e7eaf0] bg-[#f7f8fb] p-5 sm:p-7 md:px-14 md:py-12 flex flex-col justify-center">
+            <div className="mb-8 sm:mb-11 max-w-[440px] w-full mx-auto lg:mx-0">
               <img src="/zaya.png" alt="ZAYATHON" className="h-8 w-auto mb-8" />
-              <h1 className="text-[2.45rem] leading-[1.1] font-semibold text-[#1f2a3d] mb-1">
+              <h1 className="text-[2rem] sm:text-[2.45rem] leading-[1.1] font-semibold text-[#1f2a3d] mb-1">
                 Welcome back!
               </h1>
-              <p className="text-[#718095] text-[1.62rem] leading-[1.2] font-normal">
+              <p className="text-[#718095] text-[1.1rem] sm:text-[1.62rem] leading-[1.25] font-normal">
                 Login to your <BrandWordmark /> admin dashboard
               </p>
             </div>

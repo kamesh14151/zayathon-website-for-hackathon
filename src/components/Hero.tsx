@@ -132,7 +132,7 @@ const Hero = () => {
             className="mt-10"
           >
             <Link
-              to="/admin"
+              to="/admin?tab=countdown"
               className="inline-block mb-5 text-xs tracking-[0.18em] uppercase text-muted-foreground font-medium hover:text-foreground transition-colors"
               title="Customize countdown date and time in Admin Timeline"
             >
